@@ -83,3 +83,22 @@ def normalize_isbn(raw: str) -> str | None:
 def format_isbn(isbn13: str) -> str:
     """Display form without guessing hyphen positions."""
     return isbn13
+
+
+REMOVED_TEXT = "[Content removed by the registry.]"
+
+
+def scrub_removed(rec: dict, today: date, issue: int | None = None, note: str | None = None) -> dict:
+    """The record as it should stand after a removal: ID, status, label, dates and history stay; every descriptive
+    field is blanked (the schema still needs them present). Earlier versions remain in git history and in CC0 copies."""
+    event = {"date": today.isoformat(), "event": "removed", "by": "maintainer"}
+    if issue is not None:
+        event["issue"] = issue
+    if note:
+        event["note"] = note[:300]
+    earlier = [{k: v for k, v in h.items() if k != "note"} for h in rec["history"]]
+    return {"id": rec["id"], "status": "removed", "registered": rec["registered"], "updated": today.isoformat(),
+            "work": {"title": "[removed]", "author": "[removed]", "year": rec["work"]["year"]},
+            "label": rec["label"], "definitions_version": rec["definitions_version"], "statement": REMOVED_TEXT,
+            "components": [], "ai_tools": [], "attestation": rec["attestation"], "declared_by": rec["declared_by"],
+            "history": earlier + [event]}

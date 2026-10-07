@@ -12,15 +12,21 @@ from dataclasses import asdict
 from datetime import date
 from pathlib import Path
 from datetime import datetime, timezone
-from .issues import Result, process_issue
+from .issues import Result, fingerprint, process_issue
 from .records import ROOT, load_config, load_records, save_record
 
 OLD_ACCOUNT = datetime(2000, 1, 1, tzinfo=timezone.utc)  # used only by offline tests (--issues-file)
 
 
-def process(issues: list[dict], records_dir: Path, cfg: dict, today: date, account_created=lambda login: OLD_ACCOUNT) -> list[Result]:
+def process(issues: list[dict], records_dir: Path, cfg: dict, today: date, account_created=lambda login: OLD_ACCOUNT,
+            held_fingerprint=lambda number: None) -> list[Result]:
     """`account_created(login)` returns the account's creation time, or None if it could not be looked up
-    (the submission is then retried on the next run rather than decided)."""
+    (the submission is then retried on the next run rather than decided).
+
+    `held_fingerprint(number)` returns the fingerprint of the text the bot held for review (from its own comment).
+    The `approved` label only counts if the issue text still matches it: an author who edits a submission after
+    it was reviewed does not get the approval for the new text.
+    """
     records = load_records(records_dir)
     results: list[Result] = []
     ages: dict = {}
@@ -31,11 +37,20 @@ def process(issues: list[dict], records_dir: Path, cfg: dict, today: date, accou
         if "processed" in labels or "rejected" in labels or (held and not approved):
             continue  # already answered, or waiting for a maintainer
         try:
+            force = False
+            if approved:
+                stored = held_fingerprint(issue["number"])
+                if stored is not None and stored != fingerprint(issue.get("body")):
+                    results.append(Result(issue["number"], "rejected",
+                                          "This submission was edited after it was held for review, so the approval does not apply and "
+                                          "nothing was registered. Please open a new submission.", True, ["rejected"]))
+                    continue
+                force = stored is not None  # an approval for an issue the bot never held vouches for nothing
             login = (issue.get("user") or {}).get("login", "")
-            if not approved and login not in ages:
+            if not force and login not in ages:
                 ages[login] = account_created(login)
-            created = None if approved else ages[login]
-            res = process_issue(issue, records, cfg, today, created, force=approved)
+            created = None if force else ages[login]
+            res = process_issue(issue, records, cfg, today, created, force=force)
             if res.action == "ignored":
                 continue
             if res.record is not None:
@@ -69,8 +84,10 @@ def main(argv=None):
             from .github import GitHub
             gh = GitHub()
             issues = gh.list_open_issues()
-        results = process(issues, Path(a.records), cfg, date.today(), (lambda login: gh.account_created(login)) if gh else (lambda login: OLD_ACCOUNT))
-        rp.write_text(json.dumps([asdict(r) for r in results], indent=2, ensure_ascii=False))
+        results = process(issues, Path(a.records), cfg, date.today(), (lambda login: gh.account_created(login)) if gh else (lambda login: OLD_ACCOUNT),
+                          gh.held_fingerprint if gh else (lambda number: None))
+        # The results file is a workflow artifact: it carries replies only, never record content.
+        rp.write_text(json.dumps([{**asdict(r), "record": None} for r in results], indent=2, ensure_ascii=False))
         print(f"processed {len(results)} issue(s):", ", ".join(f"#{r.number}={r.action}" for r in results) or "none")
     else:
         results = [Result(**r) for r in json.loads(rp.read_text())] if rp.exists() else []

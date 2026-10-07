@@ -2,14 +2,14 @@ name: registry
 
 # Processes registration issues, commits the new records, rebuilds and deploys the site, then answers the submitters.
 # Runs are serialized (one at a time) so IDs are assigned in order. GitHub keeps only one *pending* run per
-# concurrency group, so an hourly sweep also processes any issue whose own run was superseded, and the `approved`
-# label (added by a maintainer to release a held submission) triggers a run as well.
+# concurrency group, so an hourly sweep also processes any issue whose own run was superseded, including held
+# submissions a maintainer has released with the `approved` label (or run this workflow by hand to release one at once).
 #
 # Least privilege: each job gets only the token permissions it needs, and the only job that can write to the
 # repository (`intake`) never runs the site generator.
 on:
   issues:
-    types: [opened, labeled]
+    types: [opened]
   push:
     branches: [main]
   schedule:
@@ -24,8 +24,6 @@ permissions: {}
 
 jobs:
   intake:
-    # Issue events only matter when an issue is opened or a maintainer applies `approved`.
-    if: github.event_name != 'issues' || github.event.action == 'opened' || github.event.label.name == 'approved'
     runs-on: ubuntu-latest
     permissions:
       contents: write   # commit new records to main
@@ -67,7 +65,8 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: results
-          path: results.json
+          path: results.json   # replies only, no record content
+          retention-days: 1
           if-no-files-found: ignore
 
   build:

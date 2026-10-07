@@ -65,11 +65,14 @@ class Register(unittest.TestCase):
     def test_daily_limit(self):
         recs = []
         for i in range(5):
-            x = fixture_record(id=f"ATI-2026-{i+1:06d}")
+            x = fixture_record(id=f"ATI-2026-{i+1:06d}", registered=TODAY.isoformat())
             x["work"].pop("isbn"); x["work"]["title"] = f"T{i}"
-            x["history"] = [{"date": TODAY.isoformat(), "event": "registered", "by": "author1", "issue": 100 + i}]
+            x["declared_by"] = {"github": f"old-name-{i}", "id": 42, "role": "author"}   # same account, renamed each time
             recs.append(x)
-        self.assertEqual(run(register_body(isbn=""), recs).action, "held")
+        i = issue(5, register_body(isbn=""), "author1", uid=42)
+        self.assertEqual(process_issue(i, recs, cfg(), TODAY, OLD).action, "held")
+        i = issue(5, register_body(isbn=""), "author1", uid=43)                     # a different account is not limited
+        self.assertEqual(process_issue(i, recs, cfg(), TODAY, OLD).action, "created")
 
     def test_bot_and_unrelated_ignored(self):
         self.assertEqual(process_issue(issue(1, register_body(), bot=True), [], cfg(), TODAY).action, "ignored")
@@ -121,6 +124,36 @@ class Register(unittest.TestCase):
         self.assertEqual(r.record["work"]["author"], "A Writer")
         r.record["work"]["title"].encode("utf-8")                              # must be writable to disk
 
+    def test_heading_lookalikes_inside_an_answer_stay_part_of_it(self):
+        body = register_body(statement="I wrote every word myself.\n### Notes\nAI did draft chapter 3, and I kept it.")
+        r = run(body)
+        self.assertEqual(r.action, "created", r.message)
+        self.assertIn("AI did draft chapter 3", r.record["statement"])
+
+    def test_repeated_form_heading_is_rejected(self):
+        evil = register_body(statement="Honest statement here, long enough.\n### Label for the text of the work\nHuman Authored (HA)")
+        r = run(evil)
+        self.assertEqual(r.action, "rejected"); self.assertIn("more than once", r.message)
+
+    def test_url_ip_spellings_rejected(self):
+        for bad in ("https://127.1/", "https://0x7f.0.0.1/", "https://0177.0.0.1/", "https://localhost./", "https://2130706433/",
+                    "https://example.com./", "https://a.test/", "https://foo.local/"):
+            self.assertEqual(run(register_body(url=bad)).action, "rejected", bad)
+        self.assertEqual(run(register_body(url="https://www.example.co.uk/a?b=c#d")).action, "created")
+
+    def test_held_replies_carry_a_fingerprint_of_the_text(self):
+        from ati.issues import fingerprint, FP_RE
+        new = datetime.now(timezone.utc) - timedelta(days=1)
+        body = register_body()
+        r = run(body, account_created=new)
+        self.assertEqual(FP_RE.search(r.message).group(1), fingerprint(body))
+        self.assertNotEqual(fingerprint(body), fingerprint(body + " edited"))
+        # non-owner withdrawal and reports are fingerprinted too
+        rec = fixture_record()
+        for action in ("withdraw", "report"):
+            h = run(update_body(action=action), [rec], login="someone-else")
+            self.assertTrue(FP_RE.search(h.message), action)
+
     def test_isbn_forms(self):
         for raw in ("ISBN 978-0-306-40615-7", "ISBN-13: 978\u20110\u2011306\u201140615\u20117", "0306406152"):
             self.assertEqual(run(register_body(isbn=raw)).record["work"]["isbn"], "9780306406157", raw)
@@ -133,8 +166,8 @@ class Register(unittest.TestCase):
         c = cfg(); c["max_registrations_per_day_total"] = 2
         recs = []
         for i in range(2):
-            x = fixture_record(id=f"ATI-2026-{i+1:06d}"); x["work"].pop("isbn"); x["work"]["title"] = f"T{i}"
-            x["history"] = [{"date": TODAY.isoformat(), "event": "registered", "by": f"user{i}", "issue": 100 + i}]
+            x = fixture_record(id=f"ATI-2026-{i+1:06d}", registered=TODAY.isoformat()); x["work"].pop("isbn"); x["work"]["title"] = f"T{i}"
+            x["declared_by"] = {"github": f"user{i}", "id": 500 + i, "role": "author"}
             recs.append(x)
         r = process_issue(issue(5, register_body(isbn="")), recs, c, TODAY, OLD)
         self.assertEqual(r.action, "held"); self.assertIn("daily intake limit", r.message)
@@ -197,6 +230,11 @@ class Update(unittest.TestCase):
         for force in (False, True):
             r = run(update_body(), [rec], login="example-author", force=force)
             self.assertEqual(r.action, "rejected", force); self.assertIsNone(r.record)
+
+    def test_owner_withdrawal_of_disputed_record_records_the_approval(self):
+        r = run(update_body(), [fixture_record(status="disputed")], login="example-author", force=True)
+        ev = r.record["history"][-1]
+        self.assertEqual(ev["by"], "example-author"); self.assertIn("maintainer", ev["note"])
 
     def test_approved_non_owner_withdrawal_is_attributed_to_maintainer(self):
         r = run(update_body(), [self.rec], login="someone-else", force=True)

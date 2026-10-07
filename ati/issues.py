@@ -5,7 +5,7 @@ Issue content is untrusted input: it is parsed as data, normalised, validated, l
 ever rendered through an auto-escaping template. No submitted text is echoed back into issue comments.
 """
 from __future__ import annotations
-import ipaddress, re, unicodedata
+import hashlib, re, unicodedata
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from urllib.parse import urlsplit
@@ -29,20 +29,48 @@ class Result:
     record: dict | None = None       # new or changed record to persist
 
 
-def parse_sections(body: str) -> dict[str, str]:
-    """Issue-form bodies are '### Label' headings followed by the answer."""
+def _known_labels() -> set[str]:
+    return {f[2] for fields in (forms.REGISTER, forms.UPDATE) for f in fields if f[2]}
+
+
+def parse_sections_checked(body: str) -> tuple[dict[str, str], list[str]]:
+    """Issue-form bodies are '### Label' headings followed by the answer.
+
+    Only the form's own field labels count as headings, so a line such as '### Notes' typed inside an answer stays part
+    of that answer. A form label that appears twice is ambiguous (possible injection) and is reported, not resolved.
+    """
+    known = _known_labels()
     out: dict[str, str] = {}
+    dupes: list[str] = []
     cur, buf = None, []
+
+    def close():
+        if cur is not None:
+            if cur in out:
+                dupes.append(cur)
+            out[cur] = "\n".join(buf).strip()
+
     for line in (body or "").replace("\r\n", "\n").split("\n"):
-        if line.startswith("### "):
-            if cur is not None:
-                out[cur] = "\n".join(buf).strip()
+        if line.startswith("### ") and line[4:].strip() in known:
+            close()
             cur, buf = line[4:].strip(), []
         elif cur is not None:
             buf.append(line)
-    if cur is not None:
-        out[cur] = "\n".join(buf).strip()
-    return out
+    close()
+    return out, dupes
+
+
+def parse_sections(body: str) -> dict[str, str]:
+    return parse_sections_checked(body)[0]
+
+
+def fingerprint(body: str) -> str:
+    """Identifies the exact text a maintainer reviewed; an approval is only valid for this text."""
+    return hashlib.sha256((body or "").replace("\r\n", "\n").strip().encode("utf-8", "replace")).hexdigest()[:16]
+
+
+FP_MARK = "<!-- ati-fp:{} -->"
+FP_RE = re.compile(r"<!-- ati-fp:([0-9a-f]{16}) -->")
 
 
 def _strip_unsafe(s: str, keep_newlines: bool) -> str:
@@ -93,14 +121,15 @@ def _valid_url(url: str) -> bool:
     host = (u.hostname or "").lower()
     if u.scheme not in ("http", "https") or not host or "@" in u.netloc or port not in (None, 80, 443):
         return False
-    if host == "localhost" or host.endswith((".localhost", ".local", ".internal")) or "." not in host:
-        return False
     try:
-        ipaddress.ip_address(host)
-        return False  # raw IP addresses are not a book page
-    except ValueError:
-        pass
-    return True
+        host = host.encode("idna").decode("ascii")
+    except UnicodeError:
+        return False
+    # A public name: dot-separated ASCII labels ending in an alphabetic TLD. This rules out IP addresses in every
+    # spelling browsers accept (127.1, 0x7f.0.0.1, 0177.0.0.1), trailing-dot tricks and bare local names.
+    if not re.fullmatch(r"(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{2,63}|xn--[a-z0-9-]{1,59})", host):
+        return False
+    return not (host == "localhost" or host.endswith((".localhost", ".local", ".internal", ".test", ".invalid", ".example")))
 
 
 def detect(sections: dict[str, str]) -> str | None:
@@ -219,10 +248,15 @@ def process_issue(issue: dict, records: list[dict], cfg: dict, today: date, acco
     user = user_obj.get("login", "")
     if user_obj.get("type") == "Bot":
         return Result(n, "ignored")
-    sections = parse_sections(issue.get("body") or "")
+    body_text = issue.get("body") or ""
+    sections, dupes = parse_sections_checked(body_text)
     kind = detect(sections)
     if kind is None:
         return Result(n, "ignored")
+    fp = FP_MARK.format(fingerprint(body_text))
+    if dupes:
+        return Result(n, "rejected", "No record was created: a form heading appears more than once in this submission, so it cannot be read "
+                      "reliably. Please open a new submission using the form, without lines that copy its headings.", True, ["rejected"])
 
     # idempotency: if this issue already produced a change (e.g. the push worked but the reply failed), repeat the reply
     for r in records:
@@ -256,14 +290,15 @@ def process_issue(issue: dict, records: list[dict], cfg: dict, today: date, acco
             if (datetime.now(timezone.utc) - account_created).days < cfg["min_account_age_days"]:
                 reasons.append(f"your GitHub account is less than {cfg['min_account_age_days']} days old")
             today_iso = today.isoformat()
-            registered_today = [h for r in records for h in r["history"] if h["event"] == "registered" and h["date"] == today_iso]
-            if sum(1 for h in registered_today if h.get("by", "").lower() == user.lower()) >= cfg["max_registrations_per_account_per_day"]:
+            registered_today = [r for r in records if r["registered"] == today_iso]
+            if sum(1 for r in registered_today if same_account(r["declared_by"], user_obj)) >= cfg["max_registrations_per_account_per_day"]:
                 reasons.append("this account has reached the daily registration limit")
             if len(registered_today) >= cfg.get("max_registrations_per_day_total", 10**9):
                 reasons.append("the registry has reached its daily intake limit")
             if reasons:
                 return Result(n, "held", "Thank you. This submission is waiting for a quick manual review because "
-                              + " and ".join(reasons) + ". Nothing more is needed from you; a maintainer will approve or reply.",
+                              + " and ".join(reasons) + ". Nothing more is needed from you; a maintainer will approve or reply. "
+                              "If you edit this issue after it is reviewed, the approval will not apply and you will need to submit again.\n\n" + fp,
                               False, ["needs-review"])
         rid = next_id(records, today.year)
         declared_by = {"github": user, "role": data["role"]}
@@ -276,7 +311,7 @@ def process_issue(issue: dict, records: list[dict], cfg: dict, today: date, acco
                "history": [{"date": today.isoformat(), "event": "registered", "by": user, "issue": n}]}
         bad = validate_record(rec)
         if bad:  # defensive: should be unreachable because of the checks above
-            return Result(n, "rejected", "The submission could not be turned into a valid record. A maintainer has been notified.", True, ["rejected"])
+            return Result(n, "rejected", "The submission could not be turned into a valid record. Please check the entries and submit again, and report it if it keeps happening.", True, ["rejected"])
         return Result(n, "created", _msg_created(cfg, rid), True, ["processed", "registered"], rid, rec)
 
     # update form
@@ -290,7 +325,7 @@ def process_issue(issue: dict, records: list[dict], cfg: dict, today: date, acco
     if act != "withdraw":
         if force:  # reports and corrections are resolved by a maintainer editing the record; `approved` changes nothing
             return Result(n, "ignored")
-        return Result(n, "held", "Received. Reports and corrections are reviewed by a maintainer; the record is unchanged until then.",
+        return Result(n, "held", "Received. Reports and corrections are reviewed by a maintainer; the record is unchanged until then.\n\n" + fp,
                       False, ["needs-review"], rid)
 
     if rec["status"] == "withdrawn":
@@ -299,13 +334,12 @@ def process_issue(issue: dict, records: list[dict], cfg: dict, today: date, acco
         return Result(n, "rejected", f"{rid} has been removed by the registry and cannot be withdrawn.", True, ["rejected"])
     is_owner = same_account(rec["declared_by"], user_obj)
     if (is_owner and rec["status"] == "active") or force:
-        by_maintainer = force and not is_owner
-        event = {"date": today.isoformat(), "event": "withdrawn", "by": "maintainer" if by_maintainer else user, "issue": n}
-        if by_maintainer:
+        event = {"date": today.isoformat(), "event": "withdrawn", "by": user if is_owner else "maintainer", "issue": n}
+        if force:
             event["note"] = "Approved by a maintainer following a request."
         new = {**rec, "status": "withdrawn", "updated": today.isoformat(), "history": rec["history"] + [event]}
         return Result(n, "withdrawn", f"{rid} has been withdrawn. The record stays visible with the status “withdrawn”, and the ID will not be reused.",
                       True, ["processed", "withdrawn"], rid, new)
     why = ("A record that is under dispute can only be withdrawn after a maintainer reviews the request."
            if is_owner else "Only the account that registered a record can withdraw it automatically.")
-    return Result(n, "held", f"Received. {why} A maintainer will review this request.", False, ["needs-review"], rid)
+    return Result(n, "held", f"Received. {why} A maintainer will review this request.\n\n" + fp, False, ["needs-review"], rid)

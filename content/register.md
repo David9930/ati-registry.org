@@ -28,7 +28,7 @@ Registration is free and takes about ten minutes. You will need a free GitHub ac
 
 ## What is public
 
-Everything you enter in the form, and the GitHub username that submitted it, is public and permanent, like an ISBN record. Do not include private information. Records are dedicated to the public domain (CC0 1.0) so that libraries, retailers and researchers can reuse them freely.
+Everything you enter in the form, and the GitHub username that submitted it (and its numeric account ID, in the open data), is public and permanent, like an ISBN record. Do not include private information. Records are dedicated to the public domain (CC0 1.0) so that libraries, retailers and researchers can reuse them freely.
 
 ## Self-declared, not verified
 
@@ -36,7 +36,7 @@ The registry does not check your declaration and is not a certification. Its cre
 
 ## Changing or withdrawing a record
 
-Use the [withdrawal and report form]({{ cfg.update_url }}). The original registrant can withdraw a record automatically. A withdrawn record stays visible with the status &ldquo;withdrawn&rdquo; and its ID is never reused. Corrections to a declaration are reviewed by a maintainer and recorded in the record&rsquo;s history.
+Use the [withdrawal and report form]({{ cfg.update_url }}). The original registrant can withdraw an active record automatically; a record under dispute needs a maintainer to approve it. A withdrawn record stays visible with the status &ldquo;withdrawn&rdquo; and its ID is never reused. Corrections to a declaration are reviewed by a maintainer and recorded in the record&rsquo;s history.
 
 ## No GitHub account?
 

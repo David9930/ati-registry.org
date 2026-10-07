@@ -2,6 +2,7 @@
 from __future__ import annotations
 import json, os, urllib.error, urllib.request
 from datetime import datetime, timezone
+from .issues import FP_RE
 
 API = "https://api.github.com"
 LABEL_COLORS = {"processed": ("0e8a16", "Handled by the registry bot"), "registered": ("1f5fbf", "A record was created"),
@@ -38,6 +39,21 @@ class GitHub:
             return datetime.fromisoformat(u["created_at"].replace("Z", "+00:00"))
         except Exception:
             return None
+
+    def held_fingerprint(self, number: int) -> str | None:
+        """Fingerprint in the bot's own latest 'held for review' comment (comments by anyone else are ignored)."""
+        found, page = None, 1
+        while True:
+            batch = self._req("GET", f"/repos/{self.repo}/issues/{number}/comments?per_page=100&page={page}")
+            for c in batch:
+                u = c.get("user") or {}
+                if u.get("login") == "github-actions[bot]" and u.get("type") == "Bot":
+                    hits = FP_RE.findall(c.get("body") or "")
+                    if hits:
+                        found = hits[-1]
+            if len(batch) < 100:
+                return found
+            page += 1
 
     def comment(self, number: int, body: str):
         self._req("POST", f"/repos/{self.repo}/issues/{number}/comments", {"body": body})

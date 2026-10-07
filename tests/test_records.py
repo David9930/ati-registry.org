@@ -21,6 +21,24 @@ class T(unittest.TestCase):
         self.assertEqual(validate_record(fixture_record()), [])
         self.assertEqual(len(load_records(FIX)), 1)
 
+    def test_repository_records_are_valid(self):
+        # a broken record on main would stop intake, build and deploy for everyone
+        from ati.records import ROOT
+        load_records(ROOT / "records")
+
+    def test_removal_scrub_is_valid_and_blank(self):
+        import json
+        from datetime import date
+        from ati.records import scrub_removed
+        rec = fixture_record()
+        rec["history"].append({"date": "2026-10-09", "event": "corrected", "by": "x", "note": "SECRET-NOTE"})
+        gone = scrub_removed(rec, date(2026, 10, 10), 12, "Impersonation")
+        self.assertEqual(validate_record(gone), [])
+        dump = json.dumps(gone)
+        for leak in ("Finch", "Derek Devon", "9781738651955", "FIXTURE ONLY", "SECRET-NOTE", "Gemini", "thelastaxiom"):
+            self.assertNotIn(leak, dump)
+        self.assertEqual(gone["history"][-1]["event"], "removed")
+
     def test_invalid(self):
         for bad in ({"label": "gold"}, {"status": "ok"}, {"id": "X-1"}, {"statement": "short"}):
             self.assertTrue(validate_record(fixture_record(**bad)), bad)

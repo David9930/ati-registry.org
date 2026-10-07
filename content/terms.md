@@ -25,7 +25,7 @@ Submitted record data is dedicated to the public domain under [CC0 1.0](https://
 
 ## 5. Using the marks
 
-By registering, you agree to display a label only for a work you have registered and declared accurately, to keep its wording as published, and not to suggest that the registry certified, endorses or verified your work. These are conditions of registering. The marks are also licensed under CC BY 4.0, which does not restrict how they are used, so for anyone else the [marks page](/marks/) states requests rather than licence terms; misuse can be reported (see [Disputes](/disputes/)). The registry may adopt a separate trademark policy when it is formally set up.
+By registering, you agree to display a label only for a work you have registered and declared accurately, to keep its wording as published, and not to suggest that the registry certified, endorses or verified your work. These are conditions of registering. The marks are also licensed under CC BY 4.0, which does not restrict how they are used beyond requiring credit, so for anyone else the [marks page](/marks/) states requests rather than licence terms; misuse can be reported (see [Disputes](/disputes/)). The registry may adopt a separate trademark policy when it is formally set up.
 
 ## 6. Our rights
 

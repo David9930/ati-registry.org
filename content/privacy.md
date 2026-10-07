@@ -8,8 +8,8 @@ description: What data the ATI Registry collects, publishes and retains.
 ## What this site collects
 
 - **Registration data you submit** (title, author name, year, ISBN, statement, tools and the other form fields). This becomes a public, permanent record.
-- **Your GitHub username** and the submission you open on GitHub, which are public on GitHub and shown on the record as the declarant.
-- **Nothing else.** The registry does not collect email addresses, payment details or demographic data. This site sets no cookies, runs no analytics and loads no third-party scripts, fonts or trackers.
+- **Your GitHub username and numeric account ID**, and the submission you open on GitHub. These are public on GitHub, and the username (and, in the open data, the ID) is published on the record as the declarant.
+- **Nothing else from you.** The registry does not collect email addresses, payment details or demographic data. This site sets no cookies, runs no analytics and loads no third-party scripts, fonts or trackers.
 
 ## Where it is processed
 
