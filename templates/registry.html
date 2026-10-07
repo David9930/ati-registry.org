@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="eyebrow">Open records</p>
+<h1>The registry</h1>
+<p class="lead muted">{{ total }} record{{ '' if total == 1 else 's' }}. Search by title, author, ISBN or ID.</p>
+<form class="search" role="search">
+  <label for="q">Search</label><input id="q" type="search" placeholder="Search title, author, ISBN or ID" autocomplete="off">
+  <label for="lab">Label</label>
+  <select id="lab"><option value="">All labels</option>{% for key, L in labels.items() %}<option value="{{ key }}">{{ L.name }}</option>{% endfor %}</select>
+  <label for="stat">Status</label>
+  <select id="stat"><option value="">All statuses</option><option value="active">Active</option><option value="disputed">Disputed</option><option value="withdrawn">Withdrawn</option><option value="removed">Removed</option></select>
+</form>
+<p class="muted" id="count" aria-live="polite"></p>
+<div class="table-wrap"><table class="reg">
+  <thead><tr><th>ID</th><th>Work</th><th>Label</th><th>Year</th><th>Status</th><th>Registered</th></tr></thead>
+  <tbody id="rows">
+  {% for r in records %}
+    {% if r.status == 'removed' %}
+    <tr data-s="{{ r._search }}" data-l="" data-st="removed">
+      <td class="mono" data-label="ID"><a href="/r/{{ r.id }}/">{{ r.id }}</a></td>
+      <td class="work"><span class="muted">Record removed by the registry</span></td>
+      <td data-label="Label">&ndash;</td>
+      <td data-label="Year">&ndash;</td>
+      <td data-label="Status"><span class="pill removed">removed</span></td>
+      <td data-label="Registered">{{ r.registered }}</td>
+    </tr>
+    {% else %}
+    <tr data-s="{{ r._search }}" data-l="{{ r.label }}" data-st="{{ r.status }}">
+      <td class="mono" data-label="ID"><a href="/r/{{ r.id }}/">{{ r.id }}</a></td>
+      <td class="work"><strong>{{ r.work.title }}</strong>{% if r.work.subtitle %}<span class="muted">: {{ r.work.subtitle }}</span>{% endif %}<br><span class="muted">{{ r.work.author }}</span></td>
+      <td data-label="Label">{{ labels[r.label].name }}</td>
+      <td data-label="Year">{{ r.work.year }}</td>
+      <td data-label="Status"><span class="pill {{ r.status }}">{{ r.status }}</span></td>
+      <td data-label="Registered">{{ r.registered }}</td>
+    </tr>
+    {% endif %}
+  {% endfor %}
+  </tbody>
+</table></div>
+<p id="empty" class="muted" {% if records %}hidden{% endif %}>No matching records.</p>
+<p class="muted">Machine-readable: <a href="/api/records.json">/api/records.json</a> (all records, CC0).</p>
+<script src="/static/js/search.js" defer></script>
+{% endblock %}

@@ -1,0 +1,146 @@
+name: "Register a book"
+description: "Publish a free, public, self-declared AI-use label for a book."
+title: "[Register] "
+labels: ["register"]
+body:
+  - type: markdown
+    attributes:
+      value: "Registration is **free**. Everything you enter below, and your GitHub username, will be **public and permanent**, like an ISBN record. Please do not include private information.\n\nThis is a *self-declaration*: the registry does not verify it and it is not a certification. Read the [label definitions](https://ati-registry.org/labels/) first."
+  - type: input
+    id: title
+    attributes:
+      label: "Title of the work"
+    validations:
+      required: true
+  - type: input
+    id: subtitle
+    attributes:
+      label: "Subtitle (optional)"
+  - type: input
+    id: author
+    attributes:
+      label: "Author name as it appears on the book"
+    validations:
+      required: true
+  - type: dropdown
+    id: role
+    attributes:
+      label: "Your role in relation to this work"
+      description: "The registry does not verify this. Only the author, publisher or someone they have authorized may declare."
+      options:
+        - "Author of this work"
+        - "Publisher of this work"
+        - "Authorized representative of the author or publisher"
+    validations:
+      required: true
+  - type: input
+    id: isbn
+    attributes:
+      label: "ISBN (optional)"
+      placeholder: "978-1-234-56789-7"
+  - type: input
+    id: year
+    attributes:
+      label: "Year this edition was published"
+      placeholder: "2026"
+    validations:
+      required: true
+  - type: input
+    id: edition
+    attributes:
+      label: "Edition (optional)"
+      placeholder: "First Edition"
+  - type: checkboxes
+    id: formats
+    attributes:
+      label: "Formats this declaration covers"
+      options:
+        - label: "Ebook"
+        - label: "Print"
+        - label: "Audiobook"
+  - type: input
+    id: url
+    attributes:
+      label: "Link to the book's page (optional)"
+      placeholder: "https://"
+  - type: dropdown
+    id: label
+    attributes:
+      label: "Label for the text of the work"
+      description: "Who originated the content, and who wrote the sentences? See the definitions page."
+      options:
+        - "Human Authored (HA)"
+        - "AI Master Edited (AME)"
+        - "AI Co-Authored (ACA)"
+    validations:
+      required: true
+  - type: textarea
+    id: statement
+    attributes:
+      label: "In your own words, how was AI used (or not used) in this work?"
+      description: "20 to 1,500 characters. Be specific; readers will see this verbatim."
+    validations:
+      required: true
+  - type: textarea
+    id: ai_tools
+    attributes:
+      label: "AI tools used (one per line)"
+      description: "For each tool: name, provider, plan or tier (free or paid), and what it was used for. Example: Gemini, Google (free tier): cover art. Required if any AI was used for anything in the work."
+      placeholder: "Claude, Anthropic (paid plan): editing and continuity checks"
+  - type: dropdown
+    id: cover
+    attributes:
+      label: "Cover art"
+      options:
+        - "Not applicable (no such component)"
+        - "Human-made, no AI used"
+        - "AI-assisted (human-made; AI used to retouch, upscale, clean up or modify it)"
+        - "AI-generated (an AI tool created it; a human directed and selected it)"
+    validations:
+      required: true
+  - type: dropdown
+    id: interior_art
+    attributes:
+      label: "Interior illustrations or maps"
+      options:
+        - "Not applicable (no such component)"
+        - "Human-made, no AI used"
+        - "AI-assisted (human-made; AI used to retouch, upscale, clean up or modify it)"
+        - "AI-generated (an AI tool created it; a human directed and selected it)"
+    validations:
+      required: true
+  - type: dropdown
+    id: narration
+    attributes:
+      label: "Audio narration"
+      options:
+        - "Not applicable (no such component)"
+        - "Human-made, no AI used"
+        - "AI-assisted (human-made; AI used to retouch, upscale, clean up or modify it)"
+        - "AI-generated (an AI tool created it; a human directed and selected it)"
+    validations:
+      required: true
+  - type: dropdown
+    id: translation
+    attributes:
+      label: "Translation"
+      options:
+        - "Not applicable (no such component)"
+        - "Human-made, no AI used"
+        - "AI-assisted (human-made; AI used to retouch, upscale, clean up or modify it)"
+        - "AI-generated (an AI tool created it; a human directed and selected it)"
+    validations:
+      required: true
+  - type: checkboxes
+    id: attest
+    attributes:
+      label: "Confirmations"
+      options:
+        - label: "The information above is accurate and complete to the best of my knowledge."
+          required: true
+        - label: "I have the right to make this declaration for this work, and I have checked that the terms of each AI tool listed permit use of its outputs in this publication."
+          required: true
+        - label: "I understand this is a self-declaration that the registry does not verify, and that it is not a certification."
+          required: true
+        - label: "I agree to the Terms and Privacy Policy, and that this record will be published openly under CC0 1.0."
+          required: true

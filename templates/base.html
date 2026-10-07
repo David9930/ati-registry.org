@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% if page_title %}{{ page_title }} · {% endif %}{{ cfg.name }}</title>
+<meta name="description" content="{{ description or 'A free, open registry where authors and publishers publicly declare how AI was, or was not, used in a book.' }}">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+{% if noindex %}<meta name="robots" content="noindex">
+{% endif %}
+{% if path != '/404' %}<link rel="canonical" href="{{ cfg.base_url }}{{ path }}">
+{% endif %}
+<meta property="og:title" content="{{ page_title or cfg.long_name }}">
+<meta property="og:description" content="{{ description or 'A free, open registry of self-declared AI-use labels for books.' }}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ cfg.base_url }}{{ path }}">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/static/fonts/inter-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/css/site.css">
+{% block head %}{% endblock %}
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/">{{ symbol('ai-master-edited', 'hd') }}<span>ATI Registry<small>Authorship Transparency Identifier</small></span></a>
+  <nav class="nav" aria-label="Main">
+    {% for href, text in nav %}<a href="{{ href }}"{% if path.startswith(href) and href != '/' %} aria-current="page"{% endif %}>{{ text }}</a>{% endfor %}
+  </nav>
+</div></header>
+<main id="main"><div class="wrap">
+{% block content %}{% endblock %}
+</div></main>
+<footer class="site-footer"><div class="wrap">
+  <p><strong>Self-declared. Not verified. Not a certification.</strong> Each record is the registrant&rsquo;s own statement about how AI was used in their book; the registry does not check it or endorse it.</p>
+  <nav aria-label="Footer">
+    <a href="/terms/">Terms</a><a href="/privacy/">Privacy</a><a href="/disputes/">Disputes</a><a href="/marks/">Marks</a>
+    <a href="/api/records.json">Open data (JSON)</a>{% if repo_url %}<a href="{{ repo_url }}">Source on GitHub</a>{% endif %}
+  </nav>
+  <p>Definitions and marks: <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Registry records: <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 1.0</a>. Code: MIT. This site sets no cookies, runs no analytics and loads no third-party scripts; registering or reporting happens on GitHub, under its own policies.</p>
+</div></footer>
+</body>
+</html>

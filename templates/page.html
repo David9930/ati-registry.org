@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<article class="prose">
+  {% if eyebrow %}<p class="eyebrow">{{ eyebrow }}</p>{% endif %}
+  <h1>{{ page_title }}</h1>
+  {% if draft %}<div class="notice warn"><strong>Draft v{{ cfg.definitions_version }}.</strong> {{ draft_note or 'This page is a working draft and has not yet had legal or governance review.' }}</div>{% endif %}
+  {{ body }}
+</article>
+{% endblock %}

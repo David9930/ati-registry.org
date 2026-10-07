@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">Free &middot; Open &middot; Self-declared</p>
+    <h1>Authorship Transparency Identifier</h1>
+    <p class="lead">A free, open registry where authors and publishers publicly declare how AI was, or wasn&rsquo;t, used in a book.</p>
+    <div class="actions">
+      <a class="btn" href="/register/">Register a book</a>
+      <a class="btn secondary" href="/registry/">Browse the registry</a>
+      <a class="btn secondary" href="/labels/">Read the labels</a>
+    </div>
+    <p class="muted">Self-declared and not verified. A transparency record, not a certification.</p>
+  </div>
+  <div class="hero-art">{{ symbol('ai-master-edited', 'hero') }}</div>
+</section>
+
+<h2>Three labels, one symbol</h2>
+<div class="grid">
+{% for key, L in labels.items() %}
+  <div class="card">
+    {{ lockup(key, None, 'h' ~ loop.index) }}
+    <h3>{{ L.name }} <span class="muted">({{ L.abbr }})</span></h3>
+    <p>{{ definitions[key].definition }}</p>
+    <p><a href="/labels/#{{ key }}">Full definition</a></p>
+  </div>
+{% endfor %}
+</div>
+
+<h2>How it works</h2>
+<ol class="steps">
+  <li><strong>Declare</strong>Describe in plain words how AI was used in your book, and for any cover art, illustrations, narration or translation. For now this needs a free GitHub account.</li>
+  <li><strong>Receive an ID</strong>An identifier such as <span class="mono">ATI-2026-000001</span> is assigned automatically, with a public record page.</li>
+  <li><strong>Show it</strong>Put the label and ID on your copyright page or store listing and link readers to the record.</li>
+</ol>
+
+<h2>Open by design</h2>
+<ul>
+  <li><strong>Free</strong> for every author and publisher.</li>
+  <li><strong>Open data.</strong> Records are CC0; definitions and marks are CC BY 4.0. Every change is public in version control.</li>
+  <li><strong>Accountable.</strong> Records carry a date and history, and anyone can <a href="/disputes/">report a problem</a>.</li>
+  <li><strong>Independent by intent.</strong> This is a founder-run pilot with no board seated yet. See <a href="/governance/">governance</a>.</li>
+</ul>
+
+<h2>Recently registered</h2>
+{% if recent %}
+<ul class="list-plain recent">
+  {% for r in recent %}
+  <li>{{ lockup(r.label, None, 'rc' ~ loop.index, small=True) }}
+      <span><a href="/r/{{ r.id }}/"><strong>{{ r.work.title }}</strong></a><br><span class="muted">{{ r.work.author }} &middot; <span class="mono">{{ r.id }}</span> &middot; {{ r.registered }}</span></span></li>
+  {% endfor %}
+</ul>
+<p><a href="/registry/">See all {{ total }} record{{ '' if total == 1 else 's' }} &rarr;</a></p>
+{% else %}
+<p class="muted">No records yet. The first registrations are coming.</p>
+{% endif %}
+{% endblock %}

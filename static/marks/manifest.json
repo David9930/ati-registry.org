@@ -1,0 +1,122 @@
+{
+  "lockups": [
+    {
+      "file": "ati-human-authored-horizontal.png",
+      "alt": "Human Authored, horizontal, colour \u2013 Authorship Transparency Identifier mark",
+      "caption": "Human Authored, horizontal, colour",
+      "w": 341,
+      "h": 73
+    },
+    {
+      "file": "ati-human-authored-horizontal-black.png",
+      "alt": "Human Authored, horizontal, black, one colour \u2013 Authorship Transparency Identifier mark",
+      "caption": "Human Authored, horizontal, black, one colour",
+      "w": 341,
+      "h": 73
+    },
+    {
+      "file": "ati-ai-master-edited-horizontal.png",
+      "alt": "AI Master Edited, horizontal, colour \u2013 Authorship Transparency Identifier mark",
+      "caption": "AI Master Edited, horizontal, colour",
+      "w": 363,
+      "h": 73
+    },
+    {
+      "file": "ati-ai-master-edited-horizontal-black.png",
+      "alt": "AI Master Edited, horizontal, black, one colour \u2013 Authorship Transparency Identifier mark",
+      "caption": "AI Master Edited, horizontal, black, one colour",
+      "w": 363,
+      "h": 73
+    },
+    {
+      "file": "ati-ai-co-authored-horizontal.png",
+      "alt": "AI Co-Authored, horizontal, colour \u2013 Authorship Transparency Identifier mark",
+      "caption": "AI Co-Authored, horizontal, colour",
+      "w": 291,
+      "h": 73
+    },
+    {
+      "file": "ati-ai-co-authored-horizontal-black.png",
+      "alt": "AI Co-Authored, horizontal, black, one colour \u2013 Authorship Transparency Identifier mark",
+      "caption": "AI Co-Authored, horizontal, black, one colour",
+      "w": 291,
+      "h": 73
+    }
+  ],
+  "circles": [
+    {
+      "file": "ati-human-authored-circle.png",
+      "alt": "Human Authored, circular badge, colour \u2013 Authorship Transparency Identifier mark",
+      "caption": "Human Authored, circular badge, colour",
+      "w": 200,
+      "h": 200
+    },
+    {
+      "file": "ati-human-authored-circle-black.png",
+      "alt": "Human Authored, circular badge, black, one colour \u2013 Authorship Transparency Identifier mark",
+      "caption": "Human Authored, circular badge, black, one colour",
+      "w": 200,
+      "h": 200
+    },
+    {
+      "file": "ati-ai-master-edited-circle.png",
+      "alt": "AI Master Edited, circular badge, colour \u2013 Authorship Transparency Identifier mark",
+      "caption": "AI Master Edited, circular badge, colour",
+      "w": 200,
+      "h": 200
+    },
+    {
+      "file": "ati-ai-master-edited-circle-black.png",
+      "alt": "AI Master Edited, circular badge, black, one colour \u2013 Authorship Transparency Identifier mark",
+      "caption": "AI Master Edited, circular badge, black, one colour",
+      "w": 200,
+      "h": 200
+    },
+    {
+      "file": "ati-ai-co-authored-circle.png",
+      "alt": "AI Co-Authored, circular badge, colour \u2013 Authorship Transparency Identifier mark",
+      "caption": "AI Co-Authored, circular badge, colour",
+      "w": 200,
+      "h": 200
+    },
+    {
+      "file": "ati-ai-co-authored-circle-black.png",
+      "alt": "AI Co-Authored, circular badge, black, one colour \u2013 Authorship Transparency Identifier mark",
+      "caption": "AI Co-Authored, circular badge, black, one colour",
+      "w": 200,
+      "h": 200
+    }
+  ],
+  "symbols": [
+    {
+      "file": "ati-symbol-human-authored.svg",
+      "alt": "Human Authored symbol",
+      "caption": "Human Authored colours",
+      "bg": "transparent"
+    },
+    {
+      "file": "ati-symbol-ai-master-edited.svg",
+      "alt": "AI Master Edited symbol",
+      "caption": "AI Master Edited colours",
+      "bg": "transparent"
+    },
+    {
+      "file": "ati-symbol-ai-co-authored.svg",
+      "alt": "AI Co-Authored symbol",
+      "caption": "AI Co-Authored colours",
+      "bg": "transparent"
+    },
+    {
+      "file": "ati-symbol-black.svg",
+      "alt": "Symbol, black",
+      "caption": "Black, one colour",
+      "bg": "transparent"
+    },
+    {
+      "file": "ati-symbol-white.svg",
+      "alt": "Symbol, white",
+      "caption": "White, one colour",
+      "bg": "#0d1f45"
+    }
+  ]
+}

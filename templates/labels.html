@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<article class="prose">
+  <p class="eyebrow">Definitions v{{ cfg.definitions_version }}</p>
+  <h1>The labels</h1>
+  <div class="notice warn"><strong>Draft v{{ cfg.definitions_version }}.</strong> These definitions are a working draft. Each record states the version it was declared under, and every change is public and versioned.</div>
+  <p class="lead">Two questions decide the label for the text: <strong>who originated the content, and who wrote the sentences?</strong> What counts is what appears in the published text, not which tools touched the file.</p>
+  {% for key, L in labels.items() %}
+  {% set D = definitions[key] %}
+  <section id="{{ key }}" aria-labelledby="h-{{ key }}">
+    <h2 id="h-{{ key }}">{{ L.name }} <span class="muted">({{ L.abbr }})</span></h2>
+    <p>{{ lockup(key, None, 'L' ~ loop.index) }}</p>
+    <p>{{ D.definition }}</p>
+    {% if D.allowed %}<h3>{% if key == 'ai-co-authored' %}Typical uses{% else %}Compatible with this label{% endif %}</h3><ul>{% for a in D.allowed %}<li>{{ a }}</li>{% endfor %}</ul>{% endif %}
+    {% if D.not_allowed %}<h3>Not compatible with this label</h3><ul>{% for a in D.not_allowed %}<li>{{ a }}</li>{% endfor %}</ul>{% endif %}
+    {% if D.boundary %}<p><strong>Note.</strong> {{ D.boundary }}</p>{% endif %}
+  </section>
+  {% endfor %}
+
+  <h2 id="components">Covers, illustrations, narration and translation</h2>
+  <p>The label above describes the <strong>text</strong>. Other parts of a book are declared separately, because a book can have a human-written text and an AI-generated cover, or the reverse.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Choice</th><th>Meaning</th></tr></thead>
+    <tbody>
+      {% for key, text in ai_use.items() %}<tr><td><strong>{{ ai_use_short.get(key, 'Not applicable') }}</strong></td><td>{% if key == 'na' %}The book has no such component, for example no audiobook.{% else %}{{ text }}{% endif %}</td></tr>{% endfor %}
+    </tbody></table></div>
+  <p class="muted">Example: a cover an author asked an AI image tool to design, then refined over several rounds of prompts, is <em>AI-generated, human-directed</em>.</p>
+
+  <h2 id="rights">Tool terms and rights</h2>
+  <p>The labels describe <em>process</em>. They are not statements about ownership, licensing or copyright, which depend on each tool&rsquo;s terms of use (these differ by provider and by plan, and change over time) and on the law of each country. For that reason every registration asks the registrant to list the tools used, with their plan or tier, and to confirm that they have checked that the tools&rsquo; terms permit use of the outputs in the publication. The registry does not verify this and gives no legal advice.</p>
+
+  <h2 id="versions">Versions</h2>
+  <p>This is version {{ cfg.definitions_version }}. Changes will be proposed publicly, numbered, and never applied retroactively: a record always shows the version under which it was declared.</p>
+</article>
+{% endblock %}

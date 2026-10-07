@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<article class="prose" style="max-width:56rem">
+  <p class="eyebrow">Marks and usage</p>
+  <h1>The marks</h1>
+  <p class="lead">The symbol and the three labels are free to use under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>, to show how a book you have registered was made.</p>
+
+  <h2>Using a mark</h2>
+  <p>When you register a book you agree, in the <a href="/terms/">Terms</a>, to show a label only for a work you have registered and declared accurately, and not to suggest that the registry certified, verified or endorses it. Those are conditions of registering. The marks are also licensed under CC BY 4.0, which places no limit on how they are used, so for everyone else the points below are requests:</p>
+  <ul>
+    <li>Register the book first, then show the label that matches your declaration, with its ID.</li>
+    <li>Please keep the wording and colours as designed, so readers can recognise them.</li>
+    <li>Please do not use a label for a work that has not been declared, and never imply that the registry certified or endorses a book. It records the author&rsquo;s own declaration.</li>
+    <li>If you reuse the marks outside a registered book, CC BY 4.0 asks for attribution, for example: <em>Label: ATI Registry, {{ cfg.domain }}</em>.</li>
+  </ul>
+  <p class="muted">A separate trademark policy may be adopted when the registry is formally set up.</p>
+  <p>On a copyright page, something like this works well:</p>
+  <p class="notice"><strong>AI LABEL: {{ example.name|upper }}</strong> (self-declared). Registered as <span class="mono">{{ example.id }}</span>: <span class="mono">{{ cfg.base_url }}/r/{{ example.id }}/</span></p>
+
+  <h2>Horizontal lockups</h2>
+  <p class="muted">Transparent PNGs, 3&times; resolution. Colour for light backgrounds; black for one-colour printing and e-ink.</p>
+  <div class="kit wide">
+  {% for f in kit.lockups %}<figure><div class="checker" style="padding:.8rem;border-radius:8px"><img src="/static/marks/{{ f.file }}" alt="{{ f.alt }}" width="{{ f.w }}" height="{{ f.h }}" loading="lazy"></div><figcaption>{{ f.caption }}<br><a href="/static/marks/{{ f.file }}" download>Download PNG</a></figcaption></figure>{% endfor %}
+  </div>
+
+  <h2>Circular badges</h2>
+  <div class="kit">
+  {% for f in kit.circles %}<figure><div class="checker" style="padding:.8rem;border-radius:8px"><img src="/static/marks/{{ f.file }}" alt="{{ f.alt }}" width="{{ f.w }}" height="{{ f.h }}" loading="lazy"></div><figcaption>{{ f.caption }}<br><a href="/static/marks/{{ f.file }}" download>Download PNG</a></figcaption></figure>{% endfor %}
+  </div>
+  <p class="muted">Circular badges are intended for web and larger print uses. Below about an inch, use the symbol with the label written out in text.</p>
+
+  <h2>Symbol only (SVG)</h2>
+  <div class="kit">
+  {% for f in kit.symbols %}<figure><div style="padding:.8rem;border-radius:8px;background:{{ f.bg }}"><img src="/static/marks/{{ f.file }}" alt="{{ f.alt }}" width="96" height="96" loading="lazy"></div><figcaption>{{ f.caption }}<br><a href="/static/marks/{{ f.file }}" download>Download SVG</a></figcaption></figure>{% endfor %}
+  </div>
+</article>
+{% endblock %}
