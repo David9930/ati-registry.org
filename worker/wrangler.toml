@@ -43,7 +43,7 @@ invocation_logs = false
 #   BREVO_API_KEY      only if MAIL_PROVIDER = "brevo"
 [vars]
 SITE_ORIGIN = "https://ati-registry.org"
-TURNSTILE_SITEKEY = ""            # public site key of the Turnstile widget
+TURNSTILE_SITEKEY = "0x4AAAAAAFRcl_Y7CoWByUNG"   # public site key of the Turnstile widget
 MAIL_PROVIDER = "cloudflare"      # "cloudflare" | "brevo" | "log" (local development only)
 MAIL_FROM = "registry@ati-registry.org"
 MAIL_FROM_NAME = "ATI Registry"
