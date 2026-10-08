@@ -28,4 +28,4 @@ The registry is free to use and free to run at its current scale: hosting is fre
 
 We are looking for foundations that support open publishing infrastructure, publishing and library organisations that would join as members, and people willing to serve on the advisory council.
 
-{% if cfg.contact_email %}Write to [{{ cfg.contact_email }}](mailto:{{ cfg.contact_email }}).{% else %}Open a [public issue]({{ cfg.repo_url }}/issues/new) and say it is about support, or raise it through the contact details on the [about page](/about/).{% endif %}
+{% if cfg.contact_email %}Write to [{{ cfg.contact_email }}](mailto:{{ cfg.contact_email }}).{% else %}Use the contact details on the [about page](/about/).{% endif %}

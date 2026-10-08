@@ -1,43 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
-<p class="eyebrow">Open records</p>
-<h1>The registry</h1>
-<p class="lead muted">{{ total }} record{{ '' if total == 1 else 's' }}. Search by title, author, ISBN or ID.</p>
-<form class="search" role="search">
-  <label for="q">Search</label><input id="q" type="search" placeholder="Search title, author, ISBN or ID" autocomplete="off">
-  <label for="lab">Label</label>
-  <select id="lab"><option value="">All labels</option>{% for key, L in labels.items() %}<option value="{{ key }}">{{ L.name }}</option>{% endfor %}</select>
-  <label for="stat">Status</label>
-  <select id="stat"><option value="">All statuses</option><option value="active">Active</option><option value="disputed">Disputed</option><option value="withdrawn">Withdrawn</option><option value="removed">Removed</option></select>
+<p class="eyebrow">Public records</p>
+<h1>Find a record</h1>
+<p class="lead muted">Look up a declaration by its ID or ISBN, or search by title and author.</p>
+<form class="search" role="search" action="/lookup" method="get">
+  <label for="q">Search</label>
+  <input id="q" name="q" type="search" placeholder="ATI ID, ISBN, or title and author" maxlength="100" required autocomplete="off">
+  <button class="btn" type="submit">Look up</button>
 </form>
-<p class="muted" id="count" aria-live="polite"></p>
-<div class="table-wrap"><table class="reg">
-  <thead><tr><th>ID</th><th>Work</th><th>Label</th><th>Year</th><th>Status</th><th>Registered</th></tr></thead>
-  <tbody id="rows">
-  {% for r in records %}
-    {% if r.status == 'removed' %}
-    <tr data-s="{{ r._search }}" data-l="" data-st="removed">
-      <td class="mono" data-label="ID"><a href="/r/{{ r.id }}/">{{ r.id }}</a></td>
-      <td class="work"><span class="muted">Record removed by the registry</span></td>
-      <td data-label="Label">&ndash;</td>
-      <td data-label="Year">&ndash;</td>
-      <td data-label="Status"><span class="pill removed">removed</span></td>
-      <td data-label="Registered">{{ r.registered }}</td>
-    </tr>
-    {% else %}
-    <tr data-s="{{ r._search }}" data-l="{{ r.label }}" data-st="{{ r.status }}">
-      <td class="mono" data-label="ID"><a href="/r/{{ r.id }}/">{{ r.id }}</a></td>
-      <td class="work"><strong>{{ r.work.title }}</strong>{% if r.work.subtitle %}<span class="muted">: {{ r.work.subtitle }}</span>{% endif %}<br><span class="muted">{{ r.work.author }}</span></td>
-      <td data-label="Label">{{ labels[r.label].name }}</td>
-      <td data-label="Year">{{ r.work.year }}</td>
-      <td data-label="Status"><span class="pill {{ r.status }}">{{ r.status }}</span></td>
-      <td data-label="Registered">{{ r.registered }}</td>
-    </tr>
-    {% endif %}
-  {% endfor %}
-  </tbody>
-</table></div>
-<p id="empty" class="muted" {% if records %}hidden{% endif %}>No matching records.</p>
-<p class="muted">Machine-readable: <a href="/api/records.json">/api/records.json</a> (all records, CC0).</p>
-<script src="/static/js/search.js" defer></script>
+<p class="muted">An ID looks like <span class="mono">ATI-2026-000001-7KQ4</span>. A title search needs at least four characters and shows the best few matches, so add the author&rsquo;s name to narrow it down.</p>
+<div class="notice">Every declaration has its own public page and a permanent ID. The registry looks records up one at a time and does not publish a full list. <a href="/terms/">See the terms</a>.</div>
 {% endblock %}

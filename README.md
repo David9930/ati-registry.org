@@ -1,102 +1,86 @@
 # ATI Registry
 
-The **Authorship Transparency Identifier** registry: a free, open registry where authors and publishers publicly declare
-how AI was, or wasn't, used in a book. Self-declared, not verified, not a certification.
+The **Authorship Transparency Identifier**: a free registry where authors and publishers publicly self-declare how AI was
+(or was not) used in a book, with three labels: Human Authored (HA), AI Master Edited (AME) and AI Co-Authored (ACA).
+Self-declared and not verified; a transparency record, not a certification.
 
-Site: <https://ati-registry.org> &middot; Records: CC0 &middot; Definitions and marks: CC BY 4.0 &middot; Code: MIT
-(see `LICENSE-CONTENT.md`).
+Site: <https://ati-registry.org> &middot; Definitions and marks: CC BY 4.0 &middot; Code: MIT (see `LICENSE-CONTENT.md`)
 
-## How it works
+## How it is built
 
-Everything is static files in this repository, hosted on GitHub Pages. There is no database and no server.
+Everything runs on Cloudflare: one Worker serves the static site and the registry's dynamic routes, with a private D1 (SQLite)
+database. No server to maintain.
 
 ```
-records/ATI-2026-000001.json   one public record per work (the source of truth; git history is the audit trail)
-schema/record.schema.json      what a valid record is
-content/*.md  templates/*.html  static/   site text, page templates, CSS, fonts, mark kit
-ati/                           build.py (site generator), issues.py + intake.py (registration), forms.py, marks.py
-.github/ISSUE_TEMPLATE/        generated issue forms: register, withdraw/report
-.github/workflows/registry.yml intake (commit records) -> build -> deploy, plus notify (reply to submitters)
-tests/                         unittest suite
+ati/            Python site generator: templates + content -> dist/ (static pages, marks, and the files the Worker reuses)
+content/        site text (Markdown), including the Terms, Privacy and Register pages
+templates/      Jinja templates;  static/  CSS, fonts and the mark kit
+worker/src/     the Worker: index.js (routes), validate.js, render.js, db.js, mail.js, admin.js, util.js
+worker/migrations/   D1 schema
+worker/test/    Worker tests (node:test, with a SQLite stand-in for D1)
+tests/          Python tests for the site generator
+schema/         JSON Schema of a record (the stored public document), also used by the tests
 ```
 
-### Registration flow
+Flow: the author fills in the form (`/register`, bot check by Cloudflare Turnstile) and the Worker validates it, stores it as
+*pending*, and emails a confirmation link. Opening the link and pressing the button creates the record and assigns an ID
+(`ATI-YYYY-NNNNNN-XXXX`: a sequence number plus a random suffix), and shows a private management link for correcting or
+withdrawing it. Records are public one at a time at `/r/<id>`; they are found by ID, ISBN or a short title/author search.
+There is no bulk listing, and per-visitor daily limits (hashed, never raw IPs) slow down automated copying.
+Emails are held privately. The registry can later publish everything as open data (the Terms allow it).
 
-1. An author opens the **Register a book** issue form (needs a free GitHub account).
-2. The `registry` workflow runs on new issues, on pushes to `main`, hourly, and when started by hand.
-   The `intake` job (the only one that can write to the repository) runs `python -m ati.intake process`, which reads open
-   issues, validates them, assigns the next ID (`ATI-YYYY-NNNNNN`) and writes `records/<id>.json`, then commits and pushes.
-3. The `build` job checks out `main`, builds the site (`python -m ati.build --strict`) and the `deploy` job publishes it to Pages.
-4. The `notify` job runs only after the records are pushed, and replies on each issue with the ID, labels it and closes it.
-   If anything fails earlier, nothing was announced and the next run simply processes the issue again. Processing is
-   idempotent per issue number, so a replayed registration or withdrawal repeats its reply instead of acting twice.
-
-Each job has only the token permissions it needs (`permissions: {}` at the top; `contents: write` only on `intake`,
-`issues: write` only on `notify`, Pages permissions only on `deploy`). Third-party actions are pinned to commit SHAs;
-`.github/dependabot.yml` proposes updates.
-
-Runs are serialized (`concurrency: registry`), so IDs are assigned one at a time. GitHub keeps only one *pending* run
-per concurrency group, so the hourly run is a sweep that picks up any issue whose own run was superseded.
-Note that GitHub disables scheduled workflows in a repository with no activity for 60 days; any push, including the
-registry's own record commits, counts as activity.
-
-Issue text is untrusted. Only the form's own field names count as headings, and a repeated heading rejects the
-submission. It is parsed as data, Unicode-normalised (NFC) with control, format, private-use and
-invisible-filler characters removed, length-limited, validated against the schema, and only ever rendered through an
-auto-escaping template. It is never interpolated into a shell command, and no submitted text is echoed into the bot's
-replies.
-
-Held for manual review (label `needs-review`): accounts younger than `min_account_age_days`, more than
-`max_registrations_per_account_per_day` records per account per day, more than `max_registrations_per_day_total`
-records per day overall, and every report or correction request. A held issue gets one bot comment containing a
-fingerprint of the exact text that was held. The `approved` label only counts while the issue text still matches that
-fingerprint (comments by anyone other than the bot are ignored), so an author who edits a submission after review gets
-a rejection, not the approval. If GitHub's API cannot be reached to check an
-account's age, the submission is left untouched and retried on the next run. The registrant is recognised by their
-numeric GitHub account id (not just the login, which can be renamed or reused). A declarant states whether they are
-the author, publisher or an authorized representative; the registry does not verify this.
-
-## Maintainer guide
-
-- **Approve a held registration:** read the issue as it stands, then add the label `approved`. The next hourly run processes it, or start the workflow by hand (Actions > registry > Run workflow). If the author edited the issue after it was held, the approval is refused and they must submit again.
-- **Handle a report or correction:** edit the record JSON in a pull request (add a history event such as `corrected`,
-  `disputed`, `dispute resolved` or `removed`, and set `status` and, for disputes, `dispute_note`), merge, then close the
-  issue with a short explanation. IDs are never reused or deleted.
-- **Withdraw a record on someone's behalf:** add `approved` to their withdrawal request (recorded in history as a maintainer action).
-  Withdrawals of `disputed` records also wait for approval. Removed records can never be withdrawn.
-- **Remove a record:** run `python -m ati.moderate remove ATI-YYYY-NNNNNN --issue N --note "short reason"` and commit.
-  It blanks every descriptive field, sets `status` to `removed` and adds the history event; the site, search and open data
-  then show only the ID, status and dates. Then edit or hide the original registration issue and any report that quotes the
-  content (the issue text is not touched by the tool). Earlier versions remain in git history and in anyone's CC0 copies;
-  say so to the person who asked.
-- **Change a definition:** bump `definitions_version` in `config.json`, edit `ati/labels.py` (`DEFINITIONS`), and
-  describe the change publicly. Existing records keep the version they were declared under.
-- **Edit the issue forms:** change `ati/forms.py`, then run `python -m ati.forms`. A test fails if the committed YAML is stale.
-- **Redraw the marks:** edit `ati/marks.py`, then `python -m ati.makemarks` (needs Playwright and Chromium) and commit `static/marks/`.
+The maintainer's page (`/admin`) is behind a Cloudflare Access application *and* verifies the Access token itself, for one
+address (`ADMIN_EMAIL`). It handles reports, disputes, withdrawals and removals (a removal blanks the record, keeping its ID,
+status, label and dates, and deletes the stored email).
 
 ## Develop
 
-```sh
-pip install -r requirements-dev.txt
-python -m unittest discover -s tests -v
-python -m ati.build --out dist            # then serve dist/ at the site root, e.g. python -m http.server -d dist
-                                          # (add --strict to fail on a placeholder repo, as CI does)
+```
+pip install -r requirements.txt
+python -m unittest discover -s tests          # site generator
+python -m ati.build --out dist                # build the static site
+cd worker && npm ci && npm test               # Worker tests (they build the site first)
 ```
 
-## Launch checklist
+Local run on Cloudflare's runtime: create `worker/.dev.vars` (never committed) with Turnstile's public test keys and
+`MAIL_PROVIDER=log` (messages are printed instead of sent), apply the schema with
+`npx wrangler d1 migrations apply DB --local`, then `npx wrangler dev`. Turnstile test keys:
+<https://developers.cloudflare.com/turnstile/troubleshooting/testing/>.
 
-1. Create the repository (ideally under an organisation so it can be transferred later) and push this code.
-2. Set `repo` in `config.json` (`owner/name`), and optionally `contact_email` (forward `hello@ati-registry.org` from the registrar).
-3. Settings > Pages: source **GitHub Actions**; custom domain `ati-registry.org`; tick **Enforce HTTPS** once the certificate is issued.
-4. DNS for `ati-registry.org`: four `A` records for the apex (`185.199.108.153`, `185.199.109.153`, `185.199.110.153`,
-   `185.199.111.153`) and a `CNAME` for `www` pointing to `<owner>.github.io`. Point the other domains at the .org with
-   registrar redirects.
-5. Settings > Actions > General: allow actions to run. The workflow requests its own permissions per job. If you protect `main`, allow the Actions bot to push, or the registry commits will fail.
-6. Review the draft pages (terms, privacy, governance, support) and have the terms and privacy pages checked by a lawyer.
-7. Seed the first records through the normal registration form, so they have a genuine history.
+## Deploy (Cloudflare)
 
-## Hardening to consider
+Connect the repository under Workers &amp; Pages. Build command: `pip install -r requirements.txt && python -m ati.build --out dist`;
+deploy command: `npx wrangler d1 migrations apply DB --remote --config worker/wrangler.toml && npx wrangler deploy --config worker/wrangler.toml`
+(after `npm ci --prefix worker`). Then:
 
-- Verify the pinned action SHAs against each action's release notes when Dependabot proposes updates.
-- Add a security contact (`SECURITY.md`) and enable private vulnerability reporting.
-- At several thousand records, replace the single registry table with paged JSON.
+1. Create the D1 database `ati-registry` and put its id in `worker/wrangler.toml`.
+2. Create a Turnstile widget for `ati-registry.org`; set `TURNSTILE_SITEKEY` in `wrangler.toml` and the **secrets**
+   `TURNSTILE_SECRET` and `HASH_SECRET` (a long random string) in the dashboard. Secrets never go in the repository.
+3. Email: onboard the domain to Email Sending (Workers Paid plan) and keep `MAIL_PROVIDER = "cloudflare"`, or set
+   `MAIL_PROVIDER = "brevo"` with the secret `BREVO_API_KEY`. Set `MAIL_FROM`.
+4. Admin: create an Access application for `ati-registry.org/admin*` allowing only your address; set `ADMIN_EMAIL`,
+   `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` (the application's Audience tag) in `wrangler.toml`.
+5. Add one rate-limiting rule (Security &rarr; WAF) on the burst rate, for example 20 requests per 10 seconds per IP. The Worker
+   enforces the daily limits itself (`MAX_*` variables in `wrangler.toml`; visitors are counted per network, an IPv6 /64).
+   In the Turnstile widget settings, list only `ati-registry.org` as its hostname; the Worker also checks the hostname
+   and the form name on every token.
+6. Forward `hello@ati-registry.org` with Email Routing (the address shown on the site), and keep the domain registered at the
+   registrar.
+
+`HASH_SECRET` must never change once records exist: it keys the hash that links a registrant's email address to their
+records (the "lost link" lookup and the duplicate-work check), so a new value silently breaks both. A missing value makes
+searches and record pages fail with an error in the log.
+
+Keep the database backed up: `npx wrangler d1 export ati-registry --remote --output backup.sql` (D1 is plain SQLite, so the
+data is portable).
+
+## Maintainer guide
+
+- **Report:** an email arrives; open `/admin`, read it, then mark the record disputed (with a short neutral note), correct,
+  withdraw or remove it, and close the report.
+- **Removal:** blanks every descriptive field and deletes the stored email, its hash and the private links; the ID is never reused.
+- **Notes:** the note on a *dispute* is public (it is shown on the record). Notes on every other action are private and
+  appear only in the admin page's private log. Edits by registrants are listed in the public history by field name.
+- **Definitions change:** add a new version to `DEFINITIONS_BY_VERSION` in `ati/labels.py` and bump `definitions_version`
+  in `config.json`. Existing records keep the version they were declared under.
+- **Mark kit:** `python -m ati.makemarks` regenerates the PNGs (needs `pip install playwright` and Chromium).

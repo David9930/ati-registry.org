@@ -1,14 +1,13 @@
 ---
 title: Register a book
 eyebrow: Free for every author and publisher
-description: How to register a book and publish a public, self-declared statement of how AI was or was not used.
+description: Register a book and publish a public, self-declared statement of how AI was or was not used.
 ---
-Registration is free and takes about ten minutes. You will need a free GitHub account.
+Registration is free and takes about ten minutes. You will need an email address you can open right now: we send one message to confirm it is you. Your email address is never published.
 
-<div class="actions" markdown="1">
-[Start registration]({{ cfg.register_url }}){: .btn }
-[Withdraw or report a record]({{ cfg.update_url }}){: .btn .secondary }
-</div>
+Read the [label definitions](/labels/) first. Registering is a self-declaration: the registry does not verify it, and it is not a certification.
+
+<!-- form -->
 
 ## What you will be asked
 
@@ -22,13 +21,13 @@ Registration is free and takes about ten minutes. You will need a free GitHub ac
 
 ## What happens next
 
-1. An automated check validates the form. If something is missing or invalid, a reply explains what to fix, and you open a new submission.
-2. If it passes, an ID such as `ATI-2026-000001` is assigned, the record is saved, and the reply on your submission gives the permanent link. The record page goes live a minute or two later.
-3. Accounts less than {{ cfg.min_account_age_days }} days old, or unusual volumes of submissions from one account, are held for a quick manual review.
+1. We check the form and email you a confirmation link, valid for 48 hours.
+2. When you open the link and confirm, the record is created and an ID such as `ATI-2026-000001-7KQ4` is assigned. You also get a private link for withdrawing or correcting the record.
+3. Put the label and ID on your copyright page or store listing and link readers to the record.
 
 ## What is public
 
-Everything you enter in the form, and the GitHub username that submitted it (and its numeric account ID, in the open data), is public and permanent, like an ISBN record. Do not include private information. Records are dedicated to the public domain (CC0 1.0) so that libraries, retailers and researchers can reuse them freely.
+Everything you enter in the form is public and permanent, like an ISBN record, except your email address, which stays private (see [Privacy](/privacy/)). Do not include private information. A record is shown on its own page and can be found by its ID, its ISBN, or a title and author search.
 
 ## Self-declared, not verified
 
@@ -36,8 +35,4 @@ The registry does not check your declaration and is not a certification. Its cre
 
 ## Changing or withdrawing a record
 
-Use the [withdrawal and report form]({{ cfg.update_url }}). The original registrant can withdraw an active record automatically; a record under dispute needs a maintainer to approve it. A withdrawn record stays visible with the status &ldquo;withdrawn&rdquo; and its ID is never reused. Corrections to a declaration are reviewed by a maintainer and recorded in the record&rsquo;s history.
-
-## No GitHub account?
-
-For now a free GitHub account is required. Other ways to register are planned.
+Use the private link you were given. You can correct the declaration or withdraw it at any time; changes are recorded in the record&rsquo;s history, and a withdrawn record stays visible with the status &ldquo;withdrawn&rdquo;. Its ID is never reused. If you lose the link, you can [request a new one](/manage/lost) by email.

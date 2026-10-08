@@ -19,7 +19,8 @@ The three labels were first proposed in the essay [Who Gets to Call Themselves a
 
 ## How it was built
 
-The registry practises the transparency it asks of authors. Its design, code and text were written by Claude, an AI assistant made by Anthropic, at the direction of its founder. The code and the site&rsquo;s content are open: anyone can inspect, reuse and improve them.
-{% if repo_url %}
-Source: [{{ repo_url }}]({{ repo_url }}).
-{% endif %}
+The registry practises the transparency it asks of authors. Its design, code and text were written by Claude, an AI assistant made by Anthropic, at the direction of its founder. The label definitions and marks are open under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
+## Review the site code
+
+The registry&rsquo;s code is available for review on request. {% if cfg.contact_email %}Write to [{{ cfg.contact_email }}](mailto:{{ cfg.contact_email }}), say who you are and what you would like to check, and we will arrange access.{% else %}Use the contact details on this site to ask, and say who you are and what you would like to check.{% endif %}

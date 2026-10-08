@@ -1,4 +1,4 @@
-"""Label metadata shared by the site, the mark kit, the issue forms and the validators."""
+"""Label metadata shared by the site, the mark kit and the Worker (via dist/_app/data.json)."""
 
 LABELS = {
     "human-authored": {
@@ -75,7 +75,8 @@ ATTESTATIONS = {
     "rights": ("I have the right to make this declaration for this work, and I have checked that the terms of "
                "each AI tool listed permit use of its outputs in this publication."),
     "self_declared": "I understand this is a self-declaration that the registry does not verify, and that it is not a certification.",
-    "terms": "I agree to the Terms and Privacy Policy, and that this record will be published openly under CC0 1.0.",
+    "terms": ("I agree to the Terms and Privacy Policy, including that this record is published publicly and may later be "
+              "released as open data under CC0 1.0."),
 }
 
 
