@@ -49,9 +49,9 @@ Local run on Cloudflare's runtime: create `worker/.dev.vars` (never committed) w
 
 ## Deploy (Cloudflare)
 
-Connect the repository under Workers &amp; Pages. Build command: `pip install -r requirements.txt && python -m ati.build --out dist`;
-deploy command: `npx wrangler d1 migrations apply DB --remote --config worker/wrangler.toml && npx wrangler deploy --config worker/wrangler.toml`
-(after `npm ci --prefix worker`). Then:
+Connect the repository under Workers &amp; Pages (Workers Builds), with the Worker name `ati-registry` and the root directory empty.
+Build command: `pip install -r requirements.txt && python -m ati.build --out dist && cd worker && npm ci`;
+deploy command: `cd worker && npx wrangler d1 migrations apply DB --remote && npx wrangler deploy`. Then:
 
 1. Create the D1 database `ati-registry` and put its id in `worker/wrangler.toml`.
 2. Create a Turnstile widget for `ati-registry.org`; set `TURNSTILE_SITEKEY` in `wrangler.toml` and the **secrets**
