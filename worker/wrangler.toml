@@ -21,7 +21,7 @@ html_handling = "auto-trailing-slash"
 [[d1_databases]]
 binding = "DB"
 database_name = "ati-registry"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "cd5dd187-aff9-48f4-b8f6-40dd159a1af9"
 migrations_dir = "migrations"
 
 # Cloudflare Email Sending (Workers Paid). To use Brevo instead, set MAIL_PROVIDER = "brevo" and add the secret BREVO_API_KEY.
