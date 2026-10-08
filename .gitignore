@@ -1,5 +1,6 @@
 dist/
-results.json
 __pycache__/
+node_modules/
+.wrangler/
+.dev.vars
 *.pyc
-.DS_Store

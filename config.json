@@ -3,12 +3,8 @@
   "long_name": "Authorship Transparency Identifier",
   "domain": "ati-registry.org",
   "base_url": "https://ati-registry.org",
-  "repo": "David9930/ati-registry.org",
-  "contact_email": "",
+  "contact_email": "hello@ati-registry.org",
   "founder": "Derek Devon",
   "definitions_version": "0.1",
-  "id_prefix": "ATI",
-  "max_registrations_per_account_per_day": 5,
-  "max_registrations_per_day_total": 100,
-  "min_account_age_days": 7
+  "id_prefix": "ATI"
 }

@@ -1,0 +1,62 @@
+# ATI Registry: one Worker serving the static site (../dist, built by `python -m ati.build --out dist`)
+# plus the registration, lookup, record-management and admin routes, backed by a private D1 database.
+name = "ati-registry-org"
+main = "src/index.js"
+compatibility_date = "2025-10-01"
+workers_dev = false
+preview_urls = false
+
+routes = [
+  { pattern = "ati-registry.org", custom_domain = true },
+  { pattern = "www.ati-registry.org", custom_domain = true },
+]
+
+[assets]
+directory = "../dist"
+binding = "ASSETS"
+# No not_found_handling here: with it set, a browser navigation to a path without a static file (/register, /r/...)
+# gets the static 404 page and never reaches the Worker. The Worker answers unknown paths itself.
+html_handling = "auto-trailing-slash"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ati-registry"
+database_id = "cd5dd187-aff9-48f4-b8f6-40dd159a1af9"
+migrations_dir = "migrations"
+
+# Cloudflare Email Sending (Workers Paid). To use Brevo instead, set MAIL_PROVIDER = "brevo" and add the secret BREVO_API_KEY.
+[[send_email]]
+name = "EMAIL"
+
+[triggers]
+crons = ["17 3 * * *"]   # daily clean-up of expired confirmations, counters and old closed reports
+
+# Keep error logs, but not a log line per request: private links (/manage/<token>, /verify?t=<token>) are in the URLs.
+[observability]
+enabled = true
+[observability.logs]
+invocation_logs = false
+
+# Non-secret settings. Secrets are set in the dashboard (Settings > Variables and Secrets), never in this file:
+#   TURNSTILE_SECRET   Turnstile widget secret key
+#   HASH_SECRET        long random string used to hash IP addresses and email addresses
+#   BREVO_API_KEY      only if MAIL_PROVIDER = "brevo"
+[vars]
+SITE_ORIGIN = "https://ati-registry.org"
+TURNSTILE_SITEKEY = "0x4AAAAAAFRcl_Y7CoWByUNG"   # public site key of the Turnstile widget
+MAIL_PROVIDER = "cloudflare"      # "cloudflare" | "brevo" | "log" (local development only)
+MAIL_FROM = "registry@ati-registry.org"
+MAIL_FROM_NAME = "ATI Registry"
+ADMIN_EMAIL = ""                  # the maintainer: receives report notices and is the only admin allowed in
+ACCESS_TEAM_DOMAIN = ""           # e.g. "yourteam.cloudflareaccess.com" (Zero Trust > Settings)
+ACCESS_AUD = ""                   # Application Audience tag of the Access application protecting /admin*
+MAX_REG_PER_IP_DAY = "10"         # registration submissions per visitor per day
+MAX_REG_TOTAL_DAY = "100"         # confirmed registrations per day, in total
+MAX_EMAILS_PER_ADDR_DAY = "3"     # messages to one address per day
+MAX_EMAILS_TOTAL_DAY = "150"      # messages in total per day
+MAX_VIEWS_PER_IP_DAY = "300"      # record pages per visitor per day (a miss counts five)
+MAX_LOOKUPS_PER_IP_DAY = "60"     # searches per visitor per day
+MAX_SEARCHES_TOTAL_DAY = "3000"   # title/author searches in total per day (exact ID and ISBN lookups are not counted)
+MAX_LOST_PER_ADDR_DAY = "3"       # "lost link" messages to one mailbox per day (name+tag@ counts as name@)
+MAX_LOST_EMAILS_TOTAL_DAY = "50"  # "lost link" messages in total per day (separate from registration email)
+MAX_REPORTS_PER_IP_DAY = "5"

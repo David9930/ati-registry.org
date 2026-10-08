@@ -7,22 +7,23 @@ description: What data the ATI Registry collects, publishes and retains.
 ---
 ## What this site collects
 
-- **Registration data you submit** (title, author name, year, ISBN, statement, tools and the other form fields). This becomes a public, permanent record.
-- **Your GitHub username and numeric account ID**, and the submission you open on GitHub. These are public on GitHub, and the username (and, in the open data, the ID) is published on the record as the declarant.
-- **Nothing else from you.** The registry does not collect email addresses, payment details or demographic data. This site sets no cookies, runs no analytics and loads no third-party scripts, fonts or trackers.
+- **Registration data you submit** (title, author name, year, ISBN, statement, tools, the role you declare and the other form fields). This becomes a public, permanent record.
+- **Your email address.** It is kept private and is never published, sold or used for marketing. It is used to confirm your registration, to send you the private link for managing your record, and to contact you about the record or a report made about it.
+- **Reports.** If you report a problem with a record, we keep what you write and the optional email address you give, to handle the report. A report is deleted a year after the maintainers close it.
+- **Limited technical data.** To limit automated abuse the registry keeps a salted, one-way hash of your IP address (not the address itself) with a daily counter for about a day. It sets no cookies and runs no analytics.
 
-## Where it is processed
+## Who processes it
 
-The site is served by GitHub Pages and the submissions are handled through GitHub Issues and GitHub Actions. GitHub processes technical data such as IP addresses under [its own privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
+The site, its database, the bot check on forms (Cloudflare Turnstile) and the email that confirms registrations are provided by Cloudflare, Inc. and may be processed in several countries. Cloudflare handles technical data, such as IP addresses, under [its own privacy policy](https://www.cloudflare.com/privacypolicy/). If the registry changes email provider, this page will say so.
 
 ## Retention
 
-Records are meant to be permanent, like an ISBN record. A withdrawn record stays visible with its status. Because records are public, CC0 and kept in a public version history, copies made by others, and earlier versions of a record, cannot be recalled, even if the record is later withdrawn or removed. If you ask for personal data to be removed (for example your GitHub username), it will be assessed under the law that applies to you; removing the public history of a declaration may not always be possible. Use the author name exactly as you want it to appear.
+Records are meant to be permanent, like an ISBN record. A withdrawn record stays visible with its status. Your email address is kept while the record exists, so that you can manage it. When the registry removes a record, the stored address, the private management link and the one-way hash used to match your records to your address are all deleted, and the record keeps only its ID, status, label, dates and history. A registration that is never confirmed stops working after 48 hours and is deleted by a daily clean-up, so it is gone within three days at most. Cloudflare keeps short-term point-in-time backups of the database (up to 30 days), and data deleted here can remain in those backups until they expire. Because records are public, copies made by others, and any open-data release made before a record is removed, cannot be recalled. If you ask for personal data to be removed, it will be assessed under the law that applies to you; removing the public history of a declaration may not always be possible. Use the author name exactly as you want it to appear.
 
 ## Your choices
 
-You decide what to put in the form. Use your public author name as it appears on the book. A GitHub account is required to submit, and the username cannot be hidden.
+You decide what to put in the form. Use your public author name as it appears on the book. You can ask for your email address to be changed or deleted, subject to the above, by writing to the contact address below.
 
 ## Contact
 
-Questions about privacy can be raised through the [report form]({{ cfg.update_url }}){% if cfg.contact_email %} or by email to {{ cfg.contact_email }}{% endif %}.
+Questions about privacy can be sent to {% if cfg.contact_email %}[{{ cfg.contact_email }}](mailto:{{ cfg.contact_email }}){% else %}the contact address on the [About page](/about/){% endif %}.

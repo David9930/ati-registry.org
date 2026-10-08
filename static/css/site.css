@@ -144,3 +144,20 @@ tr:last-child th,tr:last-child td{border-bottom:0}
   .reg td[data-label]::before{content:attr(data-label) ": ";color:var(--muted);font-size:.85rem}
   .reg td.work::before{content:none}
 }
+
+/* Forms (registration, correction, reports) */
+.reg-form fieldset{border:1px solid var(--line);border-radius:var(--radius);padding:1rem 1.2rem .4rem;margin:0 0 1.4rem;background:var(--surface)}
+.reg-form legend{font-weight:650;padding:0 .4rem}
+.field{margin:0 0 1.1rem}
+.field>label,.field>.label{display:block;font-weight:600;margin:0 0 .3rem}
+.field input[type=text],.field input[type=email],.field input[type=url],.field select,.field textarea{width:100%;box-sizing:border-box;font:inherit;padding:.65rem .8rem;border:1px solid var(--field);border-radius:10px;background:var(--surface);color:var(--ink)}
+.field textarea{resize:vertical}
+.hint{color:var(--muted);font-size:.9rem;margin:.3rem 0 .5rem}
+.choice{display:flex;gap:.65rem;align-items:flex-start;margin:.45rem 0;font-weight:400}
+.choice input{margin-top:.3rem;flex:none}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+button.btn{font:inherit;font-weight:600;cursor:pointer}
+.admin-act{margin:.6rem 0}
+.admin-act label{display:block;font-weight:600;margin-bottom:.3rem}
+.admin-act input[type=text],.notice form input[type=text]{width:100%;box-sizing:border-box;font:inherit;padding:.5rem .7rem;border:1px solid var(--field);border-radius:10px;background:var(--surface);color:var(--ink);margin:.2rem 0 .5rem}
+.search button.btn{margin:0}
