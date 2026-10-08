@@ -1,6 +1,6 @@
 # ATI Registry: one Worker serving the static site (../dist, built by `python -m ati.build --out dist`)
 # plus the registration, lookup, record-management and admin routes, backed by a private D1 database.
-name = "ati-registry"
+name = "ati-registry-org"
 main = "src/index.js"
 compatibility_date = "2025-10-01"
 workers_dev = false

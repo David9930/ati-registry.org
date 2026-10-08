@@ -49,7 +49,7 @@ Local run on Cloudflare's runtime: create `worker/.dev.vars` (never committed) w
 
 ## Deploy (Cloudflare)
 
-Connect the repository under Workers &amp; Pages (Workers Builds), with the Worker name `ati-registry` and the root directory empty.
+Connect the repository under Workers &amp; Pages (Workers Builds), with the Worker name `ati-registry-org` (it must match `name` in `wrangler.toml`) and the root directory empty.
 Build command: `pip install -r requirements.txt && python -m ati.build --out dist && cd worker && npm ci`;
 deploy command: `cd worker && npx wrangler d1 migrations apply DB --remote && npx wrangler deploy`. Then:
 
