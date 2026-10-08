@@ -108,7 +108,7 @@ export function site(envOver = {}, state = {}) {
         mail: async (m) => { if (s.mailFails) throw new Error("mail down"); mails.push(m); },
       };
     },
-    async req(method, p, { form, headers = {}, origin = true, ip } = {}) {
+    async req(method, p, { form, headers = {}, origin = true, ip, cf } = {}) {
       const h = new Headers({ "cf-connecting-ip": ip || s.ip, ...headers });
       let body;
       if (form !== undefined) {
@@ -120,7 +120,9 @@ export function site(envOver = {}, state = {}) {
       else if (typeof origin === "string") h.set("origin", origin);
       s.path = p.split("?")[0];
       const waits = [];
-      const res = await handle(new Request("https://ati-registry.org" + p, { method, headers: h, body, redirect: "manual" }), env, { waitUntil: (x) => waits.push(x) }, s.deps());
+      const request = new Request("https://ati-registry.org" + p, { method, headers: h, body, redirect: "manual" });
+      if (cf) Object.defineProperty(request, "cf", { value: cf }); // Cloudflare attaches request.cf (country, region, ...)
+      const res = await handle(request, env, { waitUntil: (x) => waits.push(x) }, s.deps());
       s.waits = waits.length;
       await Promise.all(waits); // work deferred until after the response is complete before the test looks at its effects
       const text = res.status === 301 || res.status === 302 || res.status === 303 ? "" : await res.text();
