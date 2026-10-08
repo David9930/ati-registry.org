@@ -58,8 +58,9 @@ deploy command: `cd worker && npx wrangler d1 migrations apply DB --remote && np
    `TURNSTILE_SECRET` and `HASH_SECRET` (a long random string) in the dashboard. Secrets never go in the repository.
 3. Email: onboard the domain to Email Sending (Workers Paid plan) and keep `MAIL_PROVIDER = "cloudflare"`, or set
    `MAIL_PROVIDER = "brevo"` with the secret `BREVO_API_KEY`. Set `MAIL_FROM`.
-4. Admin: create an Access application for `ati-registry.org/admin*` allowing only your address; set `ADMIN_EMAIL`,
-   `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` (the application's Audience tag) in `wrangler.toml`.
+4. Admin: create an Access application for `ati-registry.org/admin*` allowing only your address; set `ACCESS_TEAM_DOMAIN` and
+   `ACCESS_AUD` (the application's Audience tag) in `wrangler.toml`, and add your address as the **secret** `ADMIN_EMAIL` in the
+   dashboard (not in `wrangler.toml`, which is public). It receives report notices and visit alerts (`VISIT_ALERTS`; see `wrangler.toml`).
 5. Add one rate-limiting rule (Security &rarr; WAF) on the burst rate, for example 20 requests per 10 seconds per IP. The Worker
    enforces the daily limits itself (`MAX_*` variables in `wrangler.toml`; visitors are counted per network, an IPv6 /64).
    In the Turnstile widget settings, list only `ati-registry.org` as its hostname; the Worker also checks the hostname

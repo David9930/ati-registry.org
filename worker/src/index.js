@@ -6,6 +6,7 @@ import * as dbx from "./db.js";
 import { sendMail, confirmEmail, receiptEmail, lostEmail, reportEmail } from "./mail.js";
 import { page, message, notFound, getApp, recordPage, removedPage, resultsList, lookupForm, declarationForm, valuesFromDoc, managePage } from "./render.js";
 import { handleAdmin, REPORT_REASONS } from "./admin.js";
+import { isPageView, sendVisitAlert } from "./visit.js";
 
 const PENDING_HOURS = 48;
 const TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
@@ -20,7 +21,12 @@ export async function handle(request, env, ctx, deps = {}) {
   const d = { fetch: (...a) => fetch(...a), now: () => Date.now(), ...deps };
   d.mail = deps.mail || ((msg) => sendMail(env, msg, { fetch: d.fetch }));
   try {
-    return await route(request, env, d, ctx);
+    const res = await route(request, env, d, ctx);
+    if (String(env.VISIT_ALERTS).toLowerCase() === "all" && env.ADMIN_EMAIL && isPageView(request, res)) {
+      const job = sendVisitAlert(request, env, d);
+      if (ctx && ctx.waitUntil) ctx.waitUntil(job);
+    }
+    return res;
   } catch (e) {
     console.error("unhandled error:", e && e.stack ? e.stack : String(e));
     try {

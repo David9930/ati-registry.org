@@ -10,7 +10,8 @@ description: What data the ATI Registry collects, publishes and retains.
 - **Registration data you submit** (title, author name, year, ISBN, statement, tools, the role you declare and the other form fields). This becomes a public, permanent record.
 - **Your email address.** It is kept private and is never published, sold or used for marketing. It is used to confirm your registration, to send you the private link for managing your record, and to contact you about the record or a report made about it.
 - **Reports.** If you report a problem with a record, we keep what you write and the optional email address you give, to handle the report. A report is deleted a year after the maintainers close it.
-- **Limited technical data.** To limit automated abuse the registry keeps a salted, one-way hash of your IP address (not the address itself) with a daily counter for about a day. It sets no cookies and runs no analytics.
+- **Limited technical data.** To limit automated abuse the registry keeps a salted, one-way hash of your IP address (not the address itself) with a daily counter for about a day. It sets no cookies and loads no analytics scripts.
+- **Visit notices.** When a page is viewed, the site may send the maintainer an email with the time, the page, the visitor's approximate location (country and state or province, as reported by Cloudflare) and a broad visitor type (browser or known bot). The email does not contain the IP address, and no visit log is kept.
 
 ## Who processes it
 
