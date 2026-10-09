@@ -6,6 +6,7 @@ import { ipKey } from "../src/util.js";
 import { updateRecord, isUniqueError } from "../src/db.js";
 import { resetKeyCache } from "../src/admin.js";
 import { T0 } from "./helpers.js";
+import { handle } from "../src/index.js";
 
 const text = (html) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
 const plain = (over = {}) => site({ MAX_EMAILS_PER_ADDR_DAY: "99", MAX_REG_PER_IP_DAY: "99", MAX_EMAILS_TOTAL_DAY: "999", ...over });
@@ -296,4 +297,17 @@ test("a missing HASH_SECRET fails loudly in the log and not with a silent wrong 
     assert.equal((await s.get("/lookup?q=some+title")).status, 500);
   } finally { console.error = orig; }
   assert.ok(errors.some((e) => e.includes("HASH_SECRET is not set")));
+});
+
+test("plain http on the real domain is redirected to https; localhost and https are left alone", async () => {
+  const s = site();
+  const send = (u) => handle(new Request(u, { redirect: "manual", headers: { "cf-connecting-ip": "203.0.113.7" } }), s.env, { waitUntil() {} }, s.deps());
+  const r = await send("http://ati-registry.org/lookup?q=a%20b");
+  assert.equal(r.status, 301);
+  assert.equal(r.headers.get("location"), "https://ati-registry.org/lookup?q=a%20b");
+  const w = await send("http://www.ati-registry.org/about/");
+  assert.equal(w.status, 301);
+  assert.equal(w.headers.get("location"), "https://ati-registry.org/about/");
+  assert.equal((await send("https://ati-registry.org/about/")).status, 200);
+  assert.equal((await send("http://localhost:8787/about/")).status, 200);
 });

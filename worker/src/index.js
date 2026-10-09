@@ -42,6 +42,10 @@ async function route(request, env, d, ctx) {
   const method = request.method === "HEAD" ? "GET" : request.method;
   const site = new URL(env.SITE_ORIGIN || url.origin);
   if (url.hostname === "www." + site.hostname) return new Response(null, { status: 301, headers: { location: site.origin + url.pathname + url.search } });
+  // Plain http on the real domain goes to https (not on localhost or other hosts, so local development keeps working).
+  if (url.protocol === "http:" && site.protocol === "https:" && url.hostname === site.hostname) {
+    return new Response(null, { status: 301, headers: { location: site.origin + url.pathname + url.search } });
+  }
   if (method !== "GET" && method !== "POST") return new Response("Method not allowed", { status: 405, headers: { allow: "GET, HEAD, POST" } });
 
   const path = url.pathname.replace(/\/+$/, "") || "/";
