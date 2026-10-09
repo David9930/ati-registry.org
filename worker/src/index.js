@@ -6,7 +6,7 @@ import * as dbx from "./db.js";
 import { sendMail, confirmEmail, receiptEmail, lostEmail, reportEmail } from "./mail.js";
 import { page, message, notFound, getApp, recordPage, removedPage, resultsList, lookupForm, declarationForm, valuesFromDoc, managePage } from "./render.js";
 import { handleAdmin, REPORT_REASONS } from "./admin.js";
-import { isPageView, sendVisitAlert } from "./visit.js";
+import { isPageView, sendVisitAlert, logVisit, sendVisitDigest, visitMode } from "./visit.js";
 
 const PENDING_HOURS = 48;
 const TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
@@ -14,16 +14,25 @@ const MAX_FIELD = 5000;
 
 export default {
   fetch: (request, env, ctx) => handle(request, env, ctx),
-  scheduled: (_event, env, ctx) => { ctx.waitUntil(dbx.cleanup(env.DB, Math.floor(Date.now() / 1000))); },
+  scheduled: (_event, env, ctx) => { ctx.waitUntil(runDaily(env)); },
 };
+
+/** Once a day: email the visit summary (if enabled), then clear out what has expired. */
+export async function runDaily(env, deps = {}) {
+  const d = { fetch: (...a) => fetch(...a), now: () => Date.now(), ...deps };
+  d.mail = deps.mail || ((msg) => sendMail(env, msg, { fetch: d.fetch }));
+  try { await sendVisitDigest(env, d); } catch (e) { console.error("visit summary failed:", e && e.message); }
+  await dbx.cleanup(env.DB, Math.floor(d.now() / 1000));
+}
 
 export async function handle(request, env, ctx, deps = {}) {
   const d = { fetch: (...a) => fetch(...a), now: () => Date.now(), ...deps };
   d.mail = deps.mail || ((msg) => sendMail(env, msg, { fetch: d.fetch }));
   try {
     const res = await route(request, env, d, ctx);
-    if (String(env.VISIT_ALERTS).toLowerCase() === "all" && env.ADMIN_EMAIL && isPageView(request, res)) {
-      const job = sendVisitAlert(request, env, d);
+    const mode = visitMode(env);
+    if (mode !== "off" && isPageView(request, res)) {
+      const job = mode === "all" ? sendVisitAlert(request, env, d) : logVisit(request, env, d);
       if (ctx && ctx.waitUntil) ctx.waitUntil(job);
     }
     return res;

@@ -120,10 +120,18 @@ export async function counts(db) {
   return out;
 }
 
+// ---- visit log (for the maintainer's daily summary; no IP address is ever stored) ----------------------------------
+export const logVisit = (db, v) =>
+  db.prepare("INSERT INTO visits (at, country, region, path, kind) VALUES (?, ?, ?, ?, ?)").bind(v.at, v.country, v.region, v.path, v.kind).run();
+export const unsentVisits = (db, limit) =>
+  db.prepare("SELECT * FROM visits WHERE sent = 0 ORDER BY n ASC LIMIT ?").bind(limit).all().then((r) => r.results);
+export const markVisitsSent = (db, maxN) => db.prepare("UPDATE visits SET sent = 1 WHERE sent = 0 AND n <= ?").bind(maxN).run();
+
 export async function cleanup(db, now) {
   await db.batch([
     db.prepare("DELETE FROM pending WHERE expires_at <= ?").bind(now),
     db.prepare("DELETE FROM counters WHERE exp <= ?").bind(now),
+    db.prepare("DELETE FROM visits WHERE sent = 1 OR at < ?").bind(now - 3 * 86400),
     db.prepare("DELETE FROM reports WHERE status = 'closed' AND created_at < ?").bind(now - 365 * 86400),
   ]);
 }
