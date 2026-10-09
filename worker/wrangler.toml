@@ -31,7 +31,7 @@ migrations_dir = "migrations"
 name = "EMAIL"
 
 [triggers]
-crons = ["17 3 * * *"]   # daily clean-up of expired confirmations, counters and old closed reports
+crons = ["0 12 * * *"]   # daily at 12:00 UTC (8 AM Eastern in summer): emails the visit summary, then clears expired confirmations, counters, sent visit rows and old closed reports
 
 # Keep error logs, but not a log line per request: private links (/manage/<token>, /verify?t=<token>) are in the URLs.
 [observability]
@@ -64,6 +64,8 @@ MAX_SEARCHES_TOTAL_DAY = "3000"   # title/author searches in total per day (exac
 MAX_LOST_PER_ADDR_DAY = "3"       # "lost link" messages to one mailbox per day (name+tag@ counts as name@)
 MAX_LOST_EMAILS_TOTAL_DAY = "50"  # "lost link" messages in total per day (separate from registration email)
 MAX_REPORTS_PER_IP_DAY = "5"
-VISIT_ALERTS = "all"              # "all" = email ADMIN_EMAIL for each page view (time, country, region, page); "off" to stop
-MAX_VISIT_ALERTS_DAY = "60"       # visit alerts per day; one notice is sent when the cap is reached
+VISIT_ALERTS = "daily"            # "daily" = one summary email a day; "all" = an email per page view (capped); "off" = nothing. Needs ADMIN_EMAIL
+MAX_VISIT_LOG_DAY = "5000"        # page views logged per day for the summary (no IP address is stored)
+VISIT_DIGEST_ROWS = "200"         # most "likely people" visits listed individually in the summary
+MAX_VISIT_ALERTS_DAY = "60"       # only for "all": alerts per day; one notice is sent when the cap is reached
 VISIT_TZ = "America/New_York"     # time zone shown in visit alerts (UTC is always shown too)
