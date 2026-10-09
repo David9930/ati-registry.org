@@ -52,8 +52,8 @@ MAIL_FROM = "registry@ati-registry.org"
 MAIL_FROM_NAME = "ATI Registry"
 # ADMIN_EMAIL is NOT set here: this repository is public. Add it in the dashboard as a Secret named ADMIN_EMAIL. It is the
 # maintainer's address: it receives report notices and visit alerts, and is the only admin allowed in.
-ACCESS_TEAM_DOMAIN = ""           # e.g. "yourteam.cloudflareaccess.com" (Zero Trust > Settings)
-ACCESS_AUD = ""                   # Application Audience tag of the Access application protecting /admin*
+ACCESS_TEAM_DOMAIN = "delicate-sound-14d2.cloudflareaccess.com"   # Zero Trust > Settings > Team domain
+ACCESS_AUD = "2bfbe1e1e80cb14e9ceaef47bea838123024e3649cd6ed69f7b81edad4916b58"   # Application Audience tag of the Access application protecting /admin* (a public identifier, not a secret)
 MAX_REG_PER_IP_DAY = "10"         # registration submissions per visitor per day
 MAX_REG_TOTAL_DAY = "100"         # confirmed registrations per day, in total
 MAX_EMAILS_PER_ADDR_DAY = "3"     # messages to one address per day
