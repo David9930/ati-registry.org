@@ -187,3 +187,33 @@ test("with no visits, or when the mode is not daily, no summary is sent; old row
   assert.equal(off.mails.length, 0);
   assert.equal((await rows(off)).length, 1); // the 4-day-old row is gone, the fresh unsent one stays
 });
+
+// ---- per-country alerts on top of the daily summary ---------------------------------------------------------------
+test("daily mode also emails visits from VISIT_ALERT_COUNTRIES, and still logs every visit for the summary", async () => {
+  const s = daily({ VISIT_ALERT_COUNTRIES: "us, CA" });
+  await s.get("/about/", { cf: { country: "US", region: "Florida" }, headers: { "user-agent": UA_PERSON } });
+  await s.get("/", { cf: { country: "CA", region: "Ontario" }, headers: { "user-agent": UA_GPT } });
+  await s.get("/", { cf: { country: "DE" }, headers: { "user-agent": UA_PERSON } });
+  await s.get("/", { headers: { "user-agent": UA_PERSON } }); // no location: never matches
+  assert.deepEqual(alerts(s).map((m) => m.subject), [
+    "[ATI] Visit from Florida, United States · Browser (probably a person)",
+    "[ATI] Visit from Ontario, Canada · OpenAI / ChatGPT (bot)",
+  ]);
+  assert.equal((await rows(s)).length, 4);
+  await runDaily(s.env, s.deps());
+  assert.equal(digests(s).length, 1);
+  assert.match(digests(s)[0].subject, /Daily visits: 4 /);
+});
+
+test("with VISIT_ALERT_COUNTRIES empty or unset, daily mode sends no per-visit email; the daily cap applies to the listed countries", async () => {
+  for (const over of [{}, { VISIT_ALERT_COUNTRIES: "" }]) {
+    const s = daily(over);
+    await s.get("/about/", { cf: FL, headers: { "user-agent": UA_PERSON } });
+    assert.equal(s.mails.length, 0, JSON.stringify(over));
+  }
+  const c = daily({ VISIT_ALERT_COUNTRIES: "US", MAX_VISIT_ALERTS_DAY: "2" });
+  for (let i = 0; i < 4; i++) await c.get("/about/", { cf: FL, headers: { "user-agent": UA_PERSON } });
+  assert.equal(alerts(c).length, 2);
+  assert.equal(c.mails.filter((m) => m.subject === "[ATI] Visit alerts paused for today").length, 1);
+  assert.equal((await rows(c)).length, 4); // all four still reach the summary
+});
