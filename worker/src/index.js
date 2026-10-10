@@ -6,7 +6,7 @@ import * as dbx from "./db.js";
 import { sendMail, confirmEmail, receiptEmail, lostEmail, reportEmail } from "./mail.js";
 import { page, message, notFound, getApp, recordPage, removedPage, resultsList, lookupForm, declarationForm, valuesFromDoc, managePage } from "./render.js";
 import { handleAdmin, REPORT_REASONS } from "./admin.js";
-import { isPageView, sendVisitAlert, logVisit, sendVisitDigest, visitMode } from "./visit.js";
+import { alertsFor, isPageView, sendVisitAlert, logVisit, sendVisitDigest, visitMode } from "./visit.js";
 
 const PENDING_HOURS = 48;
 const TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
@@ -32,8 +32,10 @@ export async function handle(request, env, ctx, deps = {}) {
     const res = await route(request, env, d, ctx);
     const mode = visitMode(env);
     if (mode !== "off" && isPageView(request, res)) {
-      const job = mode === "all" ? sendVisitAlert(request, env, d) : logVisit(request, env, d);
-      if (ctx && ctx.waitUntil) ctx.waitUntil(job);
+      // "daily" logs every visit for the morning summary; visits from VISIT_ALERT_COUNTRIES also get their own email.
+      const jobs = mode === "all" ? [sendVisitAlert(request, env, d)] : [logVisit(request, env, d)];
+      if (mode === "daily" && alertsFor(request, env)) jobs.push(sendVisitAlert(request, env, d));
+      if (ctx && ctx.waitUntil) ctx.waitUntil(Promise.all(jobs));
     }
     return res;
   } catch (e) {

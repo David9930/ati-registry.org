@@ -65,7 +65,8 @@ MAX_LOST_PER_ADDR_DAY = "3"       # "lost link" messages to one mailbox per day 
 MAX_LOST_EMAILS_TOTAL_DAY = "50"  # "lost link" messages in total per day (separate from registration email)
 MAX_REPORTS_PER_IP_DAY = "5"
 VISIT_ALERTS = "daily"            # "daily" = one summary email a day; "all" = an email per page view (capped); "off" = nothing. Needs ADMIN_EMAIL
-MAX_VISIT_LOG_DAY = "5000"        # page views logged per day for the summary (no IP address is stored)
+VISIT_ALERT_COUNTRIES = "US,CA"   # with "daily": visits from these countries (ISO codes) also get their own email; "" for none
+MAX_VISIT_LOG_DAY = "5000"      # page views logged per day for the summary (no IP address is stored)
 VISIT_DIGEST_ROWS = "200"         # most "likely people" visits listed individually in the summary
 MAX_VISIT_ALERTS_DAY = "60"       # only for "all": alerts per day; one notice is sent when the cap is reached
 VISIT_TZ = "America/New_York"     # time zone shown in visit alerts (UTC is always shown too)

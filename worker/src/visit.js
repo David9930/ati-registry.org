@@ -3,6 +3,8 @@
 //
 // VISIT_ALERTS (needs ADMIN_EMAIL):  "daily" = log page views and email one summary each morning (default);
 //                                    "all"   = one email per page view, capped per day;   "off" = nothing.
+// VISIT_ALERT_COUNTRIES:             with "daily", visits from these countries (ISO codes, e.g. "US,CA") also get their own
+//                                    email, sharing the MAX_VISIT_ALERTS_DAY cap.
 import { intVar, isoDate } from "./util.js";
 import * as dbx from "./db.js";
 
@@ -53,6 +55,13 @@ function fmtTime(ms, tz, withZone = false) {
 export function visitMode(env) {
   const m = String(env.VISIT_ALERTS || "").toLowerCase();
   return env.ADMIN_EMAIL && (m === "daily" || m === "all") ? m : "off";
+}
+
+/** In "daily" mode: true when the visitor is in a country listed in VISIT_ALERT_COUNTRIES (e.g. "US,CA"), so that visit also gets its own email. */
+export function alertsFor(request, env) {
+  const code = String((request.cf && request.cf.country) || "").toUpperCase();
+  if (!code) return false;
+  return String(env.VISIT_ALERT_COUNTRIES || "").toUpperCase().split(/[\s,;]+/).includes(code);
 }
 
 /** True for a public HTML page that was served successfully. */
@@ -125,7 +134,7 @@ export function digestEmail({ rows, tz, maxRows, capped = [], logCap }) {
 
   out.push("", "ALL VISITS BY COUNTRY", "  " + countries.slice(0, 12).map(([c, n]) => `${c} ${n}`).join(", ") + (countries.length > 12 ? `, and ${countries.length - 12} more` : ""));
   out.push("", "—", "Places come from Cloudflare (approximate); the visitor type is the browser's own label, which can be faked. No IP addresses are recorded. " +
-    'Set VISIT_ALERTS to "all" for an email per visit, or "off" to stop these, in worker/wrangler.toml.');
+    'In worker/wrangler.toml: VISIT_ALERT_COUNTRIES picks countries whose visits are also emailed one by one, VISIT_ALERTS = "all" emails every visit, "off" stops these.');
 
   return { subject: `[ATI] Daily visits: ${rows.length} (${people.length} likely ${people.length === 1 ? "person" : "people"})`, text: out.join("\n") };
 }
@@ -152,7 +161,7 @@ export function visitEmail({ ms, tz, v, cap }) {
     subject: `[ATI] Visit from ${where} · ${v.kind}`,
     text: `Someone opened a page on ati-registry.org.\n\nWhen:     ${fmtTime(ms, tz, true)}  =  ${new Date(ms).toISOString().slice(0, 16).replace("T", " ")} UTC\nFrom:     ${where}\nPage:     ${v.path}\nVisitor:  ${v.kind}\n\n` +
           `The place is the visitor's approximate location from Cloudflare, and the visitor type is read from the browser's own label, which can be faked. ` +
-          `No IP address is recorded or included. At most ${cap} of these are sent a day; set VISIT_ALERTS to "daily" for one summary a day or "off" to stop them.`,
+          `No IP address is recorded or included. At most ${cap} of these are sent a day. To change which visits are emailed, edit VISIT_ALERTS or VISIT_ALERT_COUNTRIES in worker/wrangler.toml.`,
   };
 }
 
