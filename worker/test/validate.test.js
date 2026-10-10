@@ -22,7 +22,7 @@ test("a valid declaration produces a clean document", () => {
 test("every problem is listed", () => {
   const { errors } = run({ title: "", year: "20", isbn: "123", statement: "x", attest: [], label: "", role: "" });
   const all = errors.join("\n");
-  for (const frag of ["title is required", "four-digit year", "ISBN", "20 to 1,500".replace("to", "and"), "confirmations", "three labels", "role"]) {
+  for (const frag of ["title is required", "four-digit year", "ISBN", "at least 20 characters", "confirmations", "three labels", "role"]) {
     assert.ok(all.includes(frag), frag + "\n" + all);
   }
 });
@@ -75,8 +75,19 @@ test("year must be four ASCII digits within range", () => {
 test("length limits", () => {
   assert.ok(run({ title: "x".repeat(201) }).errors.some((e) => e.includes("200")));
   assert.ok(run({ author: "x".repeat(151) }).errors.some((e) => e.includes("150")));
-  assert.ok(run({ statement: "x".repeat(1501) }).errors.some((e) => e.includes("1,500")));
+  const words = (n) => Array.from({ length: n }, () => "word").join(" ");
+  assert.deepEqual(run({ statement: words(200) }).errors, []); // 200 words is about 1,000 characters
+  assert.ok(run({ statement: words(201) }).errors.some((e) => e.includes("200 words")));
+  assert.ok(run({ statement: "x".repeat(2001) }).errors.some((e) => e.includes("200 words"))); // one huge token is still capped
   assert.ok(run({ ai_tools: Array.from({ length: 11 }, (_, i) => "tool " + i).join("\n") }).errors.some((e) => e.includes("at most 10")));
+});
+
+test("each AI tool line is limited by words (200), not characters", () => {
+  const words = (n) => Array.from({ length: n }, () => "word").join(" ");
+  assert.deepEqual(run({ ai_tools: "Claude, Anthropic: " + words(197) }).errors, []); // about 1,000 characters, 200 words
+  assert.ok(run({ ai_tools: "Claude, Anthropic: " + words(200) }).errors.some((e) => e.includes("200 words")));
+  assert.ok(run({ ai_tools: "x".repeat(2001) }).errors.some((e) => e.includes("too long"))); // one enormous "word" is still capped
+  assert.ok(run({ ai_tools: Array.from({ length: 10 }, () => words(150)).join("\n") }).errors.some((e) => e.includes("too long")));
 });
 
 test("isbn forms", () => {

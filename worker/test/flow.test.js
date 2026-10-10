@@ -301,7 +301,7 @@ test("a very long field cannot overflow the form handling", async () => {
   const s = site();
   const r = await s.post("/register", { ...GOOD, statement: "word ".repeat(7000), "cf-turnstile-response": "ok" });
   assert.equal(r.status, 400);
-  assert.match(r.text, /1,500/);
+  assert.match(r.text, /200 words/);
 });
 
 test("www redirects to the main address", async () => {
