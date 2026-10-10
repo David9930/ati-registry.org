@@ -118,7 +118,8 @@ export function validateDeclaration(input, data, today) {
 
   const tools = g("ai_tools").split("\n").map((t) => clean(t)).filter(Boolean);
   if (tools.length > 10) errs.push("List at most 10 AI tools.");
-  if (tools.some((t) => t.length > 200)) errs.push("Each AI tool line must be 200 characters or fewer.");
+  if (tools.some((t) => t.split(/\s+/).length > 200)) errs.push("Each AI tool line must be 200 words or fewer.");
+  else if (tools.some((t) => t.length > 2000) || g("ai_tools").length > 6000) errs.push("The AI tools section is too long. Shorten it.");
 
   const components = [];
   for (const part of Object.keys(data.parts)) {

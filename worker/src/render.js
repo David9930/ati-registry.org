@@ -207,8 +207,8 @@ export function declarationForm({ data, values = {}, errors = [], action, mode, 
     ${field("statement", "In your own words, how was AI used (or not used) in this work?",
       `<textarea id="statement" name="statement" rows="6" maxlength="1500" required>${esc(v("statement"))}</textarea>`, "20 to 1,500 characters. Be specific; readers will see this verbatim.")}
     ${field("ai_tools", "AI tools used (one per line)",
-      `<textarea id="ai_tools" name="ai_tools" rows="4" maxlength="2400" placeholder="Claude, Anthropic (paid plan): editing and continuity checks">${esc(v("ai_tools"))}</textarea>`,
-      "For each tool: name, provider, plan or tier (free or paid), and what it was used for. Required if any AI was used for anything in the work.")}
+      `<textarea id="ai_tools" name="ai_tools" rows="4" maxlength="6000" placeholder="Claude, Anthropic (paid plan): editing and continuity checks">${esc(v("ai_tools"))}</textarea>`,
+      "For each tool: name, provider, plan or tier (free or paid), and what it was used for. Up to 200 words per line. Required if any AI was used for anything in the work.")}
     ${parts}
   </fieldset>
   <fieldset><legend>Confirmations</legend>${attest}</fieldset>

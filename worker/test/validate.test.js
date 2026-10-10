@@ -79,6 +79,14 @@ test("length limits", () => {
   assert.ok(run({ ai_tools: Array.from({ length: 11 }, (_, i) => "tool " + i).join("\n") }).errors.some((e) => e.includes("at most 10")));
 });
 
+test("each AI tool line is limited by words (200), not characters", () => {
+  const words = (n) => Array.from({ length: n }, () => "word").join(" ");
+  assert.deepEqual(run({ ai_tools: "Claude, Anthropic: " + words(197) }).errors, []); // about 1,000 characters, 200 words
+  assert.ok(run({ ai_tools: "Claude, Anthropic: " + words(200) }).errors.some((e) => e.includes("200 words")));
+  assert.ok(run({ ai_tools: "x".repeat(2001) }).errors.some((e) => e.includes("too long"))); // one enormous "word" is still capped
+  assert.ok(run({ ai_tools: Array.from({ length: 10 }, () => words(150)).join("\n") }).errors.some((e) => e.includes("too long")));
+});
+
 test("isbn forms", () => {
   assert.equal(normalizeIsbn("978-1-7386519-5-5"), "9781738651955");
   assert.equal(normalizeIsbn("0-306-40615-2"), "9780306406157");
