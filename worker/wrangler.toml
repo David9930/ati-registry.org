@@ -64,6 +64,8 @@ MAX_SEARCHES_TOTAL_DAY = "3000"   # title/author searches in total per day (exac
 MAX_LOST_PER_ADDR_DAY = "3"       # "lost link" messages to one mailbox per day (name+tag@ counts as name@)
 MAX_LOST_EMAILS_TOTAL_DAY = "50"  # "lost link" messages in total per day (separate from registration email)
 MAX_REPORTS_PER_IP_DAY = "5"
+MAX_FEEDBACK_PER_IP_DAY = "5"     # feedback submissions per visitor per day
+MAX_FEEDBACK_TOTAL_DAY = "40"     # feedback submissions in total per day (they wait for your approval)
 VISIT_ALERTS = "daily"            # "daily" = one summary email a day; "all" = an email per page view (capped); "off" = nothing. Needs ADMIN_EMAIL
 VISIT_ALERT_COUNTRIES = "US,CA"   # with "daily": visits from these countries (ISO codes) also get their own email; "" for none
 MAX_VISIT_LOG_DAY = "5000"      # page views logged per day for the summary (no IP address is stored)

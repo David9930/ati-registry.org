@@ -16,7 +16,7 @@ from .marks import symbol_svg, lockup_html
 from .records import ROOT, load_config
 
 NAV = [("/labels/", "Labels"), ("/registry/", "Find a record"), ("/register/", "Register"),
-       ("/about/", "About"), ("/governance/", "Governance"), ("/support/", "Support")]
+       ("/about/", "About"), ("/governance/", "Governance"), ("/support/", "Support"), ("/feedback/", "Your Feedback")]
 CONTENT_PAGES = ["disputes", "terms", "privacy", "about", "governance", "support"]
 FORM_MARKER = "<!-- form -->"
 

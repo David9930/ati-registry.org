@@ -99,7 +99,7 @@ export function site(envOver = {}, state = {}) {
         fetch: async (url, init) => {
           fetches.push({ url: String(url), init });
           if (String(url).includes("siteverify")) {
-            const action = s.turnstileAction ?? ({ "/register": "register", "/report": "report", "/manage/lost": "lost" }[s.path] || "");
+            const action = s.turnstileAction ?? ({ "/register": "register", "/report": "report", "/manage/lost": "lost", "/feedback": "feedback" }[s.path] || "");
             return new Response(JSON.stringify({ success: s.turnstileOk, hostname: s.turnstileHost ?? "ati-registry.org", action }), { status: 200 });
           }
           if (String(url).includes("/cdn-cgi/access/certs")) return new Response(JSON.stringify({ keys: s.jwks || [] }), { status: 200 });

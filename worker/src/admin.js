@@ -4,7 +4,8 @@
 import { esc, ID_RE } from "./util.js";
 import { page, message, notFound } from "./render.js";
 import * as dbx from "./db.js";
-import { searchKey, workKey } from "./validate.js";
+import { searchKey, workKey, clean } from "./validate.js";
+import { feedbackAdminSection, feedbackAdminView } from "./feedback.js";
 
 const b64u = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(s.length / 4) * 4, "=")), (c) => c.charCodeAt(0));
 const json = (s) => JSON.parse(new TextDecoder().decode(b64u(s)));
@@ -100,12 +101,13 @@ const admin = (env, title, content, status = 200) => page(env, { title, content:
 const REASONS = { inaccurate: "The declaration is inaccurate", impersonation: "Impersonation or no right to declare", rights: "Rights or legal concern", abuse: "Abusive or unlawful content", other: "Something else" };
 export const REPORT_REASONS = REASONS;
 
-function dashboard(c, counts, open, recent) {
+function dashboard(c, counts, open, recent, fb) {
   const t = (rows, head) => `<div class="table-wrap"><table><thead><tr>${head.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`;
   return `<p class="eyebrow">Maintainer</p><h1>Registry admin</h1>
   <p>${Object.entries(counts).map(([k, v]) => `<span class="pill ${esc(k)}">${esc(k)}</span> ${v}`).join(" &nbsp; ")}</p>
   <h2>Open reports (${open.length})</h2>
   ${open.length ? t(open.map((r) => `<tr><td>#${r.n}</td><td><a href="/admin/r/${esc(r.record_id)}">${esc(r.record_id)}</a></td><td>${esc(REASONS[r.reason] || r.reason)}</td><td>${esc(when(r.created_at))}</td></tr>`), ["Report", "Record", "Reason", "Filed"]) : '<p class="muted">None.</p>'}
+  ${feedbackAdminSection(fb.pending, fb.published)}
   <h2>Recent records</h2>
   ${t(recent.map((r) => { const doc = JSON.parse(r.doc); return `<tr><td><a href="/admin/r/${esc(r.id)}">${esc(r.id)}</a></td><td>${esc(doc.work.title)}</td><td><span class="pill ${esc(r.status)}">${esc(r.status)}</span></td><td>${esc(r.registered)}</td></tr>`; }), ["ID", "Title", "Status", "Registered"])}
   <form class="search" method="get" action="/admin/find"><label for="fid">Record ID</label><input id="fid" name="id" placeholder="ATI-2026-000001-ABCD" maxlength="40" required><button class="btn" type="submit">Open</button></form>`;
@@ -146,8 +148,9 @@ export async function handleAdmin(c, path) {
   const db = env.DB;
   let m;
   if (path === "/admin" && request.method === "GET") {
-    const [counts, open, recent] = await Promise.all([dbx.counts(db), dbx.listReports(db, "open"), dbx.recentRecords(db, 25)]);
-    return admin(env, "Admin", dashboard(c, counts, open, recent));
+    const [counts, open, recent, pending, published] = await Promise.all([dbx.counts(db), dbx.listReports(db, "open"), dbx.recentRecords(db, 25),
+      dbx.listFeedback(db, "pending", 50), dbx.listFeedback(db, "published", 25)]);
+    return admin(env, "Admin", dashboard(c, counts, open, recent, { pending, published }));
   }
   if (path === "/admin/find" && request.method === "GET") {
     const id = (new URL(request.url).searchParams.get("id") || "").trim().toUpperCase();
@@ -187,6 +190,24 @@ export async function handleAdmin(c, path) {
       }
     }
     return admin(env, row.id, recordView(row, doc, await dbx.reportsFor(db, row.id), await dbx.adminLogFor(db, row.id), flash));
+  }
+  if ((m = /^\/admin\/f\/([0-9]{1,9})$/.exec(path)) && (request.method === "GET" || request.method === "POST")) {
+    const n = Number(m[1]);
+    const row = await dbx.getFeedback(db, n);
+    if (!row) return notFound(env);
+    let flash = "";
+    if (request.method === "POST") {
+      const f = await c.readForm();
+      if (f.error) return message(env, { title: "Bad request", body: "<p>That form could not be read.</p>", status: f.error });
+      const act = String(f.one.act || ""), reply = clean(f.one.reply, true).slice(0, 600) || null;
+      const to = (loc) => new Response(null, { status: 303, headers: { location: loc, "cache-control": "no-store" } });
+      if (act === "publish" && row.status === "pending") { await dbx.publishFeedback(db, n, reply, c.nowSec); return to("/admin"); }
+      if (act === "reply" && row.status === "published") { await dbx.setFeedbackReply(db, n, reply); return to(`/admin/f/${n}`); }
+      if (act === "unpublish" && row.status === "published") { await dbx.unpublishFeedback(db, n); return to(`/admin/f/${n}`); }
+      if (act === "delete") { await dbx.deleteFeedback(db, n); return to("/admin"); }
+      flash = '<div class="notice warn" role="alert">That action does not apply to this comment.</div>';
+    }
+    return admin(env, `Feedback #${n}`, feedbackAdminView(row, flash));
   }
   if ((m = /^\/admin\/report\/([0-9]{1,9})\/close$/.exec(path)) && request.method === "POST") {
     const f = await c.readForm();
