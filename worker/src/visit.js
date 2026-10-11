@@ -9,7 +9,7 @@ import { intVar, isoDate } from "./util.js";
 import * as dbx from "./db.js";
 
 // Pages that carry private links or belong to the maintainer: never reported.
-const PRIVATE_PATH = /^\/(admin|manage|verify)(\/|$)/;
+const PRIVATE_PATH = /^\/(admin|manage|verify)(\/|$)|^\/google[0-9a-f]+\.html$/;   // the last is Google's ownership file
 
 // Order matters: the first match wins. Read from the user-agent header, which a visitor can fake.
 const KINDS = [

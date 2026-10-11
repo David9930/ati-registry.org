@@ -54,6 +54,7 @@ MAIL_FROM_NAME = "ATI Registry"
 # maintainer's address: it receives report notices and visit alerts, and is the only admin allowed in.
 ACCESS_TEAM_DOMAIN = "delicate-sound-14d2.cloudflareaccess.com"   # Zero Trust > Settings > Team domain
 ACCESS_AUD = "2bfbe1e1e80cb14e9ceaef47bea838123024e3649cd6ed69f7b81edad4916b58"   # Application Audience tag of the Access application protecting /admin* (a public identifier, not a secret)
+GOOGLE_VERIFICATION = "google2a63ffc883c132a4.html"   # Google Search Console ownership file name (public); served at exactly /<name>
 MAX_REG_PER_IP_DAY = "10"         # registration submissions per visitor per day
 MAX_REG_TOTAL_DAY = "100"         # confirmed registrations per day, in total
 MAX_EMAILS_PER_ADDR_DAY = "3"     # messages to one address per day
