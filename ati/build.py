@@ -95,7 +95,16 @@ def build(out: Path, config_path: Path | None = None, quiet: bool = False) -> di
     def render(tpl: str, path: str, **ctx):
         return env.get_template(tpl).render(**{**base, "path": path, **ctx})
 
-    write("index.html", render("home.html", "/"), "/")
+    home_desc = ("A free public registry of AI use by authors. Authors and publishers declare whether a book is Human Authored, "
+                 "AI Master Edited or AI Co-Authored.")
+    site_ld = {"@context": "https://schema.org", "@graph": [
+        {"@type": "WebSite", "@id": f"{cfg['base_url']}/#website", "url": f"{cfg['base_url']}/", "name": cfg["name"],
+         "alternateName": cfg["long_name"], "description": home_desc, "inLanguage": "en"},
+        {"@type": "Organization", "@id": f"{cfg['base_url']}/#org", "url": f"{cfg['base_url']}/", "name": cfg["name"],
+         "alternateName": cfg["long_name"], "logo": f"{cfg['base_url']}/static/marks/ati-ai-master-edited-circle.png"},
+    ]}
+    write("index.html", render("home.html", "/", title=f"{cfg['name']}: public registry of AI use by authors",
+          description=home_desc, ld=site_ld), "/")
     write("labels/index.html", render("labels.html", "/labels/", page_title="The labels",
           description="The three labels and how to choose between them."), "/labels/")
     write("registry/index.html", render("registry.html", "/registry/", page_title="Find a record",
@@ -131,6 +140,7 @@ def build(out: Path, config_path: Path | None = None, quiet: bool = False) -> di
     (out / "robots.txt").write_text(
         f'User-agent: *\nAllow: /\nDisallow: /lookup\nDisallow: /admin\nDisallow: /manage/\nDisallow: /verify\nDisallow: /report\n'
         f'Sitemap: {cfg["base_url"]}/sitemap.xml\n', encoding="utf-8")
+    urls += ["/register/", "/feedback/"]   # pages the Worker serves, but which belong in the sitemap
     sm = "".join(f'<url><loc>{escape(cfg["base_url"] + u)}</loc></url>' for u in sorted(urls))
     (out / "sitemap.xml").write_text(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{sm}</urlset>\n', encoding="utf-8")
     if not quiet:

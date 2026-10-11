@@ -51,7 +51,7 @@ class Build(unittest.TestCase):
             self.assertIn("form-action 'self'", h, p)
             self.assertNotIn("frame-ancestors", h, p)   # not allowed in a meta tag; sent as a header instead
             self.assertNotRegex(h, r"\son[a-z]+=\"", str(p))
-            for m in re.finditer(r"<script(?![^>]*src=)[^>]*>", h):
+            for m in re.finditer(r"<script(?![^>]*src=)(?![^>]*application/ld\+json)[^>]*>", h):   # a JSON-LD block is data, not code
                 self.fail(f"{p}: inline script {m.group(0)}")
         self.assertNotIn('rel="canonical"', self.read("404.html"))
 
@@ -98,7 +98,26 @@ class Build(unittest.TestCase):
             self.assertIn(f"Disallow: {path}", robots)
         sm = self.read("sitemap.xml")
         self.assertIn("https://ati-registry.org/labels/", sm)
+        for page in ("/register/", "/feedback/"):
+            self.assertIn(f"https://ati-registry.org{page}", sm)
         self.assertNotIn("/r/", sm)
+
+    def test_search_and_sharing_metadata(self):
+        h = self.read("index.html")
+        self.assertIn("<title>ATI Registry: public registry of AI use by authors</title>", h)
+        self.assertIn("<h1>A public registry of AI use by authors</h1>", h)
+        self.assertRegex(h, r'<meta name="description" content="[^"]*AI use by authors[^"]*">')
+        for tag in ('property="og:image" content="https://ati-registry.org/static/og-image.png"', 'name="twitter:card" content="summary_large_image"',
+                    'property="og:site_name"'):
+            self.assertIn(tag, h)
+        ld = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', h, re.S).group(1))
+        self.assertEqual({n["@type"] for n in ld["@graph"]}, {"WebSite", "Organization"})
+        self.assertNotIn("Derek", json.dumps(ld))   # the founder's display name is still an open decision
+        png = (self.out / "static" / "og-image.png").read_bytes()
+        self.assertEqual(struct.unpack(">II", png[16:24]), (1200, 630))
+        self.assertIn("og:image", self.read("_app/shell.html"))
+        self.assertIn("og:image", self.read("about/index.html"))
+        self.assertIn("<title>About the registry · ATI Registry</title>", self.read("about/index.html"))
 
     def test_marks_example_is_generic(self):
         h = self.read("marks/index.html")

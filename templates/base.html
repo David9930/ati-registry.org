@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{% if page_title %}{{ page_title }} · {% endif %}{{ cfg.name }}</title>
+<title>{% if title %}{{ title }}{% else %}{% if page_title %}{{ page_title }} · {% endif %}{{ cfg.name }}{% endif %}</title>
 <meta name="description" content="{{ description or 'A free, open registry where authors and publishers publicly declare how AI was, or was not, used in a book.' }}">
 {% block csp %}<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'">
 {% endblock %}
@@ -11,9 +11,15 @@
 {% endif %}
 {% if path != '/404' and not shell %}<link rel="canonical" href="{{ cfg.base_url }}{{ path }}">
 {% endif %}
-<meta property="og:title" content="{{ page_title or cfg.long_name }}">
+<meta property="og:title" content="{{ title or page_title or cfg.long_name }}">
 <meta property="og:description" content="{{ description or 'A free registry of self-declared AI-use labels for books.' }}">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="{{ cfg.name }}">
+<meta property="og:image" content="{{ cfg.base_url }}/static/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="ATI Registry: a public registry of AI use by authors, with the labels Human Authored, AI Master Edited and AI Co-Authored">
+<meta name="twitter:card" content="summary_large_image">
 {% if not shell %}<meta property="og:url" content="{{ cfg.base_url }}{{ path }}">
 {% endif %}
 <meta name="color-scheme" content="light dark">
