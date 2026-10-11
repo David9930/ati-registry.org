@@ -1,11 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { site, T0 } from "./helpers.js";
-import { visitorKind } from "../src/visit.js";
+import { visitorKind, visitEmail } from "../src/visit.js";
 import { runDaily } from "../src/index.js";
 
 const FL = { country: "US", region: "Florida" };
-const alerts = (s) => s.mails.filter((m) => m.subject.startsWith("[ATI] Visit from"));
+const alerts = (s) => s.mails.filter((m) => m.subject.startsWith("[ATI] Visit: "));
 
 test("a page view emails the maintainer with time, region, page and visitor type", async () => {
   const s = site({ VISIT_ALERTS: "all" });
@@ -14,7 +14,7 @@ test("a page view emails the maintainer with time, region, page and visitor type
   assert.equal(s.mails.length, 1);
   const m = s.mails[0];
   assert.equal(m.to, "admin@example.org");
-  assert.match(m.subject, /^\[ATI\] Visit from Florida, United States · Browser/);
+  assert.match(m.subject, /^\[ATI\] Visit: \/about\/ · Florida, United States · Browser/);
   assert.match(m.text, /When:\s+Oct 8, 8:00\sAM \(America\/New_York\)\s+=\s+2026-10-08 12:00 UTC/);
   assert.match(m.text, /From:\s+Florida, United States/);
   assert.match(m.text, /Page:\s+\/about\//);
@@ -37,8 +37,8 @@ test("a missing or odd location still sends, without crashing", async () => {
   const s = site({ VISIT_ALERTS: "all" });
   await s.get("/", { headers: { "user-agent": "Mozilla/5.0 Chrome/130" } });
   await s.get("/", { cf: { country: "T1" }, headers: { "user-agent": "Mozilla/5.0 Chrome/130" } });
-  assert.match(s.mails[0].subject, /Visit from unknown country/);
-  assert.match(s.mails[1].subject, /Visit from Tor network/);
+  assert.match(s.mails[0].subject, /^\[ATI\] Visit: \/ · unknown country/);
+  assert.match(s.mails[1].subject, /^\[ATI\] Visit: \/ · Tor network/);
 });
 
 test("nothing is sent unless VISIT_ALERTS is all and ADMIN_EMAIL is set", async () => {
@@ -196,8 +196,8 @@ test("daily mode also emails visits from VISIT_ALERT_COUNTRIES, and still logs e
   await s.get("/", { cf: { country: "DE" }, headers: { "user-agent": UA_PERSON } });
   await s.get("/", { headers: { "user-agent": UA_PERSON } }); // no location: never matches
   assert.deepEqual(alerts(s).map((m) => m.subject), [
-    "[ATI] Visit from Florida, United States · Browser (probably a person)",
-    "[ATI] Visit from Ontario, Canada · OpenAI / ChatGPT (bot)",
+    "[ATI] Visit: /about/ · Florida, United States · Browser (probably a person)",
+    "[ATI] Visit: / · Ontario, Canada · OpenAI / ChatGPT (bot)",
   ]);
   assert.equal((await rows(s)).length, 4);
   await runDaily(s.env, s.deps());
@@ -216,4 +216,11 @@ test("with VISIT_ALERT_COUNTRIES empty or unset, daily mode sends no per-visit e
   assert.equal(alerts(c).length, 2);
   assert.equal(c.mails.filter((m) => m.subject === "[ATI] Visit alerts paused for today").length, 1);
   assert.equal((await rows(c)).length, 4); // all four still reach the summary
+});
+
+test("the subject leads with the page and keeps a very long page short", () => {
+  const v = { country: "Canada", region: "Ontario", path: "/" + "a".repeat(100), kind: "Browser (probably a person)" };
+  const { subject, text } = visitEmail({ ms: T0, tz: "America/New_York", v, cap: 60 });
+  assert.match(subject, /^\[ATI\] Visit: \/a{56}\.\.\. · Ontario, Canada · Browser/);
+  assert.ok(text.includes("/" + "a".repeat(100)), "the body still carries the whole path");
 });

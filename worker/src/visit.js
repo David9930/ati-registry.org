@@ -158,7 +158,7 @@ export async function sendVisitDigest(env, d) {
 export function visitEmail({ ms, tz, v, cap }) {
   const where = place(v);
   return {
-    subject: `[ATI] Visit from ${where} · ${v.kind}`,
+    subject: `[ATI] Visit: ${v.path.length > 60 ? v.path.slice(0, 57) + "..." : v.path} · ${where} · ${v.kind}`, // the page first: it is what a phone shows
     text: `Someone opened a page on ati-registry.org.\n\nWhen:     ${fmtTime(ms, tz, true)}  =  ${new Date(ms).toISOString().slice(0, 16).replace("T", " ")} UTC\nFrom:     ${where}\nPage:     ${v.path}\nVisitor:  ${v.kind}\n\n` +
           `The place is the visitor's approximate location from Cloudflare, and the visitor type is read from the browser's own label, which can be faked. ` +
           `No IP address is recorded or included. At most ${cap} of these are sent a day. To change which visits are emailed, edit VISIT_ALERTS or VISIT_ALERT_COUNTRIES in worker/wrangler.toml.`,
