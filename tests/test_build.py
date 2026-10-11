@@ -112,6 +112,7 @@ class Build(unittest.TestCase):
             self.assertIn(tag, h)
         ld = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', h, re.S).group(1))
         self.assertEqual({n["@type"] for n in ld["@graph"]}, {"WebSite", "Organization"})
+        self.assertIn('name="msvalidate.01" content="81A37D68E77BCD0AA051A75D369D12D5"', h)   # Bing Webmaster Tools ownership check
         self.assertNotIn("Derek", json.dumps(ld))   # the founder's display name is still an open decision
         png = (self.out / "static" / "og-image.png").read_bytes()
         self.assertEqual(struct.unpack(">II", png[16:24]), (1200, 630))
