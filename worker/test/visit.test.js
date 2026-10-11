@@ -93,6 +93,16 @@ test("a failing mail provider does not affect the page", async () => {
 const UA_PERSON = "Mozilla/5.0 (X11; Linux x86_64) Chrome/130 Safari/537.36";
 const UA_GPT = "Mozilla/5.0 AppleWebKit/537.36; compatible; ChatGPT-User/1.0; +https://openai.com/bot";
 const rows = (s) => s.env.DB.q("SELECT * FROM visits ORDER BY n");
+
+test("Google's ownership file is served at its exact path, only for the configured name, and is not reported as a visit", async () => {
+  const s = site({ VISIT_ALERTS: "daily", VISIT_ALERT_COUNTRIES: "US", GOOGLE_VERIFICATION: "google0123456789abcdef.html" });
+  const r = await s.get("/google0123456789abcdef.html", { cf: { country: "US" } });
+  assert.equal(r.status, 200);
+  assert.equal(r.text, "google-site-verification: google0123456789abcdef.html");
+  assert.equal((await s.get("/google1111111111111111.html")).status, 404);
+  assert.equal(rows(s).length, 0);
+  assert.equal(s.mails.length, 0);
+});
 const digests = (s) => s.mails.filter((m) => m.subject.startsWith("[ATI] Daily visits"));
 const daily = (over = {}) => site({ VISIT_ALERTS: "daily", ...over });
 

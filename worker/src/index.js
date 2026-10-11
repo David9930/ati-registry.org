@@ -81,6 +81,11 @@ async function route(request, env, d, ctx) {
   if (path === "/manage/lost") return method === "GET" ? lostGet(c) : lostPost(c);
   if ((m = /^\/manage\/([^/]+)(?:\/(edit|withdraw))?$/.exec(path))) return manage(c, safeDecode(m[1]), m[2] || "");
   if (path === "/admin" || path.startsWith("/admin/")) return handleAdmin(c, path);
+  // Google Search Console's ownership file. Served here at its exact path, because the static-asset layer redirects every *.html URL.
+  // Only the one configured name is answered, so nobody else can use this site to prove ownership of it.
+  if (method === "GET" && env.GOOGLE_VERIFICATION && path === "/" + env.GOOGLE_VERIFICATION) {
+    return new Response(`google-site-verification: ${env.GOOGLE_VERIFICATION}`, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=3600" } });
+  }
   const asset = await env.ASSETS.fetch(request);
   return asset.status === 404 ? notFound(env) : asset;
 }
