@@ -95,7 +95,7 @@ def build(out: Path, config_path: Path | None = None, quiet: bool = False) -> di
     def render(tpl: str, path: str, **ctx):
         return env.get_template(tpl).render(**{**base, "path": path, **ctx})
 
-    home_desc = ("A free public registry of AI use by authors. Authors and publishers declare whether a book is Human Authored, "
+    home_desc = ("A free public registry of AI use by authors. Authors and publishers declare whether a book is Human Authored (no AI), "
                  "AI Master Edited or AI Co-Authored.")
     site_ld = {"@context": "https://schema.org", "@graph": [
         {"@type": "WebSite", "@id": f"{cfg['base_url']}/#website", "url": f"{cfg['base_url']}/", "name": cfg["name"],

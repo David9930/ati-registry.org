@@ -105,7 +105,7 @@ class Build(unittest.TestCase):
     def test_search_and_sharing_metadata(self):
         h = self.read("index.html")
         self.assertIn("<title>ATI Registry: public registry of AI use by authors</title>", h)
-        self.assertIn("<h1>A public registry of AI use by authors</h1>", h)
+        self.assertIn("<h1>A public registry for authors who use AI, and those who don&rsquo;t</h1>", h)
         self.assertRegex(h, r'<meta name="description" content="[^"]*AI use by authors[^"]*">')
         for tag in ('property="og:image" content="https://ati-registry.org/static/og-image.png"', 'name="twitter:card" content="summary_large_image"',
                     'property="og:site_name"'):
