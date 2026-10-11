@@ -168,7 +168,7 @@ export function visitEmail({ ms, tz, v, cap }) {
 /** Sends the alert for one page view. Never throws; resolves when done. */
 export async function sendVisitAlert(request, env, d) {
   try {
-    const cap = intVar(env, "MAX_VISIT_ALERTS_DAY", 60);
+    const cap = intVar(env, "MAX_VISIT_ALERTS_DAY", 200);
     const now = d.now();
     const exp = (Math.floor(now / 86400000) + 1) * 86400 + 3600;
     const day = isoDate(now);
