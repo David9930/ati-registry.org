@@ -1,10 +1,12 @@
 {% extends "base.html" %}
+{% block head %}<script type="application/ld+json">{{ ld|tojson }}</script>
+{% endblock %}
 {% block content %}
 <section class="hero">
   <div>
     <p class="eyebrow">Free &middot; Public &middot; Self-declared</p>
-    <h1>Authorship Transparency Identifier</h1>
-    <p class="lead">A free, open registry where authors and publishers publicly declare how AI was, or wasn&rsquo;t, used in a book.</p>
+    <h1>A public registry for authors who use AI, and those who don&rsquo;t</h1>
+    <p class="lead">The Authorship Transparency Identifier (ATI) is a free, open registry where authors and publishers publicly declare how AI was, or wasn&rsquo;t, used in a book.</p>
     <div class="actions">
       <a class="btn" href="/register/">Register a book</a>
       <a class="btn secondary" href="/registry/">Find a record</a>
