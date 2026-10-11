@@ -77,6 +77,8 @@ data is portable).
 
 ## Maintainer guide
 
+- **Feedback:** an email arrives for each new comment on `/feedback` (it never contains the comment). Open `/admin`, read it under
+  "Feedback awaiting review", then publish it (with an optional public reply) or delete it. Nothing is public until you publish.
 - **Report:** an email arrives; open `/admin`, read it, then mark the record disputed (with a short neutral note), correct,
   withdraw or remove it, and close the report.
 - **Removal:** blanks every descriptive field and deletes the stored email, its hash and the private links; the ID is never reused.

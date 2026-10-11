@@ -53,6 +53,11 @@ export const lostEmail = (items) => ({
         `If you did not ask for this, someone else entered your address on the request form. The old links no longer work and only the links above do; nobody else can see this message.${sign}`,
 });
 
+export const feedbackEmail = (n, role, topic, origin) => ({
+  subject: `[ATI] New feedback awaiting review (#${n})`,
+  text: `Someone left feedback (${role}, about: ${topic}). It is not public until you publish it.\n\nReview it: ${origin}/admin/f/${n}`,
+});
+
 export const reportEmail = (n, id, reason, origin) => ({
   subject: `[ATI] Report #${n} on ${id}`,
   text: `A new report was filed on ${id} (${reason}).\n\nReview it: ${origin}/admin/r/${id}`,

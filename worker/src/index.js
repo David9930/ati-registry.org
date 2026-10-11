@@ -3,9 +3,10 @@
 import { esc, sha256Hex, hmacHex, randomToken, randomSuffix, isoDate, ID_RE, intVar, readForm, ipKey, HONEYPOT } from "./util.js";
 import { validateDeclaration, normalizeEmail, normalizeIsbn, clean, searchKey, workKey, wordsKey, canonEmail } from "./validate.js";
 import * as dbx from "./db.js";
-import { sendMail, confirmEmail, receiptEmail, lostEmail, reportEmail } from "./mail.js";
+import { sendMail, confirmEmail, receiptEmail, lostEmail, reportEmail, feedbackEmail } from "./mail.js";
 import { page, message, notFound, getApp, recordPage, removedPage, resultsList, lookupForm, declarationForm, valuesFromDoc, managePage } from "./render.js";
 import { handleAdmin, REPORT_REASONS } from "./admin.js";
+import { validateFeedback, feedbackPageHtml, FB_ROLES, FB_TOPICS } from "./feedback.js";
 import { alertsFor, isPageView, sendVisitAlert, logVisit, sendVisitDigest, visitMode } from "./visit.js";
 
 const PENDING_HOURS = 48;
@@ -76,6 +77,7 @@ async function route(request, env, d, ctx) {
   if (path === "/lookup" && method === "GET") return lookup(c);
   if ((m = /^\/r\/([^/]+)$/.exec(path)) && method === "GET") return recordView(c, safeDecode(m[1]));
   if (path === "/report" || (m = /^\/report\/([^/]+)$/.exec(path))) return method === "GET" ? reportGet(c, m && safeDecode(m[1])) : reportPost(c);
+  if (path === "/feedback") return method === "GET" ? feedbackGet(c) : feedbackPost(c);
   if (path === "/manage/lost") return method === "GET" ? lostGet(c) : lostPost(c);
   if ((m = /^\/manage\/([^/]+)(?:\/(edit|withdraw))?$/.exec(path))) return manage(c, safeDecode(m[1]), m[2] || "");
   if (path === "/admin" || path.startsWith("/admin/")) return handleAdmin(c, path);
@@ -366,6 +368,39 @@ async function reportPost(c) {
     try { await d.mail({ to: env.ADMIN_EMAIL, ...reportEmail(n, id, v.reason, new URL(env.SITE_ORIGIN || c.url.origin).origin) }); } catch (e) { console.error("report email failed:", e && e.message); }
   }
   return message(env, { title: "Report received", body: "<p>Thank you. The maintainers will review your report as capacity allows; this is a volunteer-run pilot, so there is no guaranteed response time.</p>" });
+}
+
+// ---- feedback -------------------------------------------------------------------------------------------------
+// Comments wait in the database until the maintainer publishes them from the admin page.
+async function feedbackPageResponse(c, values, errors, status = 200) {
+  const ready = botCheckReady(c.env);
+  const items = await dbx.listFeedback(c.env.DB, "published", 100);
+  return page(c.env, { title: "Your feedback", desc: "Tell the ATI Registry what is unclear, wrong or missing.", status, turnstile: ready,
+    content: feedbackPageHtml({ items, values, errors, ready, sitekey: c.env.TURNSTILE_SITEKEY }) });
+}
+const feedbackGet = (c) => feedbackPageResponse(c, {}, []);
+
+async function feedbackPost(c) {
+  const { env, d } = c;
+  const f = await c.readForm();
+  if (f.error) return formError(c, f);
+  const v = formValues(f);
+  if (!botCheckReady(env)) return unavailable(c);
+  const thanks = () => message(env, { title: "Thank you", body: '<p>Your feedback has been received. The maintainer reads every comment, and it will appear on the <a href="/feedback/">feedback page</a> once it has been reviewed.</p>' });
+  if (v[HONEYPOT]) return thanks();
+  const { errs, value } = validateFeedback(v);
+  if (errs.length) return feedbackPageResponse(c, v, errs, 400);
+  if (!(await allow(c, `fb:${await visitor(c)}`, 1, intVar(env, "MAX_FEEDBACK_PER_IP_DAY", 5)))) return tooMany(c, "comments");
+  if (!(await verifyTurnstile(c, f.one["cf-turnstile-response"], "feedback"))) return feedbackPageResponse(c, v, ["The bot check did not complete. Please try again."], 400);
+  if (!(await allow(c, "fbtotal", 1, intVar(env, "MAX_FEEDBACK_TOTAL_DAY", 40)))) {
+    return message(env, { title: "Please try again tomorrow", status: 429, body: "<p>The feedback page has received a lot of comments today. Please try again tomorrow.</p>" });
+  }
+  const n = await dbx.insertFeedback(env.DB, { now: c.nowSec, ...value });
+  if (env.ADMIN_EMAIL && (await allow(c, "fbmail", 1, 10))) {
+    try { await d.mail({ to: env.ADMIN_EMAIL, ...feedbackEmail(n, FB_ROLES[value.role], FB_TOPICS[value.topic], new URL(env.SITE_ORIGIN || c.url.origin).origin) }); }
+    catch (e) { console.error("feedback email failed:", e && e.message); }
+  }
+  return thanks();
 }
 
 // ---- managing a record (private link) -------------------------------------------------------------------------

@@ -127,11 +127,28 @@ export const unsentVisits = (db, limit) =>
   db.prepare("SELECT * FROM visits WHERE sent = 0 ORDER BY n ASC LIMIT ?").bind(limit).all().then((r) => r.results);
 export const markVisitsSent = (db, maxN) => db.prepare("UPDATE visits SET sent = 1 WHERE sent = 0 AND n <= ?").bind(maxN).run();
 
+// ---- feedback (shown publicly only once the maintainer has published it) ----------------------------------------
+export async function insertFeedback(db, f) {
+  const row = await db.prepare(
+    "INSERT INTO feedback (created_at, name, role, topic, body, email) VALUES (?, ?, ?, ?, ?, ?) RETURNING n"
+  ).bind(f.now, f.name ?? null, f.role, f.topic, f.body, f.email ?? null).first();
+  return row.n;
+}
+export const getFeedback = (db, n) => db.prepare("SELECT * FROM feedback WHERE n = ?").bind(n).first();
+export const listFeedback = (db, status, limit) =>
+  db.prepare("SELECT * FROM feedback WHERE status = ? ORDER BY n DESC LIMIT ?").bind(status, limit).all().then((r) => r.results);
+export const publishFeedback = (db, n, reply, now) =>
+  db.prepare("UPDATE feedback SET status = 'published', reply = ?, published_at = COALESCE(published_at, ?) WHERE n = ?").bind(reply ?? null, now, n).run();
+export const unpublishFeedback = (db, n) => db.prepare("UPDATE feedback SET status = 'pending' WHERE n = ?").bind(n).run();
+export const setFeedbackReply = (db, n, reply) => db.prepare("UPDATE feedback SET reply = ? WHERE n = ?").bind(reply ?? null, n).run();
+export const deleteFeedback = (db, n) => db.prepare("DELETE FROM feedback WHERE n = ?").bind(n).run();
+
 export async function cleanup(db, now) {
   await db.batch([
     db.prepare("DELETE FROM pending WHERE expires_at <= ?").bind(now),
     db.prepare("DELETE FROM counters WHERE exp <= ?").bind(now),
     db.prepare("DELETE FROM visits WHERE sent = 1 OR at < ?").bind(now - 3 * 86400),
     db.prepare("DELETE FROM reports WHERE status = 'closed' AND created_at < ?").bind(now - 365 * 86400),
+    db.prepare("DELETE FROM feedback WHERE status = 'pending' AND created_at < ?").bind(now - 90 * 86400),
   ]);
 }
