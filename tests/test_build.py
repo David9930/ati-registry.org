@@ -24,7 +24,7 @@ class Build(unittest.TestCase):
 
     def test_pages_exist_and_nothing_registry_related_is_static(self):
         for rel in ("index.html", "labels/index.html", "registry/index.html", "marks/index.html", "about/index.html", "governance/index.html",
-                    "support/index.html", "terms/index.html", "privacy/index.html", "disputes/index.html", "404.html", "robots.txt",
+                    "support/index.html", "terms/index.html", "privacy/index.html", "disputes/index.html", "faq/index.html", "404.html", "robots.txt",
                     "sitemap.xml", "_headers", "static/css/site.css", "static/favicon.svg", "_app/shell.html", "_app/data.json"):
             self.assertTrue((self.out / rel).exists(), rel)
         for rel in ("register", "r", "api", "CNAME", ".nojekyll", "records"):
@@ -159,6 +159,21 @@ class Build(unittest.TestCase):
         h = self.read("about/index.html")
         self.assertIn("Review the site code", h)
         self.assertIn("mailto:hello@ati-registry.org", h)
+
+    def test_faq_page_has_the_ai_disclosure_first_and_is_indexed(self):
+        h = self.read("faq/index.html")
+        disclosure = "[This FAQ was written by AI and reviewed by a human (Derek Devon)]"
+        self.assertIn(disclosure, h)
+        article = h[h.index('<article class="prose">'):]
+        self.assertLess(article.index(disclosure), article.index("<h1>"))   # the disclosure is the first thing on the page
+        self.assertIn("<title>AI Use Disclosure for Authors: FAQ · ATI Registry</title>", h)
+        self.assertRegex(h, r'<meta name="description" content="[^"]*disclosing AI use in books[^"]*">')
+        self.assertEqual(h.count("<h1>"), 1)
+        self.assertGreater(h.count("<h3>"), 40)   # questions are real headings so they can match searches
+        self.assertNotIn("{{", h)
+        self.assertIn("https://ati-registry.org/faq/", self.read("sitemap.xml"))
+        self.assertIn('href="/faq/"', self.read("index.html"))   # linked from the main navigation
+        self.assertNotIn(disclosure, self.read("about/index.html"))   # only pages that set it show it
 
     def test_deterministic(self):
         again = self.tmp / "dist2"

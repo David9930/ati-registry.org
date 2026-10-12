@@ -16,8 +16,8 @@ from .marks import symbol_svg, lockup_html
 from .records import ROOT, load_config
 
 NAV = [("/labels/", "Labels"), ("/registry/", "Find a record"), ("/register/", "Register"),
-       ("/about/", "About"), ("/governance/", "Governance"), ("/support/", "Support"), ("/feedback/", "Your Feedback")]
-CONTENT_PAGES = ["disputes", "terms", "privacy", "about", "governance", "support"]
+       ("/about/", "About"), ("/faq/", "FAQ"), ("/governance/", "Governance"), ("/support/", "Support"), ("/feedback/", "Your Feedback")]
+CONTENT_PAGES = ["disputes", "terms", "privacy", "about", "faq", "governance", "support"]
 FORM_MARKER = "<!-- form -->"
 
 HEADERS = """/*
@@ -122,7 +122,7 @@ def build(out: Path, config_path: Path | None = None, quiet: bool = False) -> di
         meta, body = _frontmatter((ROOT / "content" / f"{slug}.md").read_text(encoding="utf-8"))
         write(f"{slug}/index.html", render("page.html", f"/{slug}/", page_title=meta.get("title", slug.title()),
               eyebrow=meta.get("eyebrow"), description=meta.get("description"), draft=bool(meta.get("draft")),
-              draft_note=meta.get("draft_note"), body=md(body)), f"/{slug}/")
+              draft_note=meta.get("draft_note"), disclosure=meta.get("disclosure"), body=md(body)), f"/{slug}/")
     write("404.html", render("page.html", "/404", page_title="Page not found", eyebrow="404",
           body=Markup('<p>That page does not exist. Try <a href="/registry/">finding a record</a> or the <a href="/">home page</a>.</p>')))
 
