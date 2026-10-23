@@ -5,7 +5,7 @@ draft: true
 draft_note: A working prospectus. No funding has been sought or received, and no board or legal entity exists yet.
 description: What funding would pay for, and the rules that keep the ATI Registry independent.
 ---
-The registry is free to use and free to run at its current scale: hosting is free and the domain names cost a few tens of dollars a year. What it needs to become a credible, lasting piece of infrastructure is independence, which takes governance, legal work and a little paid stewardship. That is what support would fund.
+The registry is free to use and free to run at its current scale: hosting is free and the domain names cost less than $50 a year. What it needs to become a credible, lasting piece of infrastructure is independence, which takes governance, legal work and a little paid stewardship. That is what support would fund.
 
 ## What funding would pay for
 
